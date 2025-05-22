@@ -7,6 +7,11 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DegreeController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AcademicYearController;
+use App\Http\Controllers\SemesterYearController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\ClassroomController;
+
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -40,13 +45,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy'])->name('teachers.destroy');
     Route::put('/teachers/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');
 
-
-    //report
-    // Route::get('/', [TeacherController::class, 'index'])->name('teachers.index');
-
+    //for dashboard
     Route::get('/api/reports', [DashboardController::class, 'index'])
         ->name('dashboard.reports');
 
+
+    // CN02 - QL Lop hoc & mon hoc
+    Route::get('/academicyears', [AcademicYearController::class, 'index'])->name('academicyears.index');
+    Route::post('/academicyears', [AcademicYearController::class, 'store'])->name('academicyears.store');
+    Route::delete('/academicyears/{academicyear}', [AcademicYearController::class, 'destroy'])->name('academicyears.destroy');
+    // Route::put('/academicyears/{academicyear}', [AcademicYearController::class, 'update'])->name('academicyears.update');
+
+    Route::get('/semesters', [SemesterController::class, 'index'])->name('semesters.index');
+    Route::post('/semesters', [SemesterController::class, 'store'])->name('semesters.store');
+    Route::delete('/semesters/{semester}', [SemesterController::class, 'destroy'])->name('semesters.destroy');
+    // Route::put('/semesters/{semester}', [TeacherController::class, 'update'])->name('semesters.update');
+
+    Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+    Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
+    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
+    // Route::put('/teachers/{teacher}', [TeacherController::class, 'update'])->name('courses.update');
+
+    Route::get('/classrooms', [ClassroomController::class, 'index'])->name('classrooms.index');
+    Route::post('/classrooms', [ClassroomController::class, 'store'])->name('classrooms.store');
+    Route::delete('/classrooms/{classroom}', [ClassroomController::class, 'destroy'])->name('classrooms.destroy');
+    Route::put('/classrooms/{classroom}', [ClassroomController::class, 'update'])->name('classrooms.update');
 });
 
 require __DIR__.'/settings.php';

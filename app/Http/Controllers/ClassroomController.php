@@ -1,0 +1,164 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Classroom;
+use App\Models\Course;
+use App\Models\Semester;
+use App\Models\Teacher;
+use App\Models\AcademicYear;
+use Exception;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class ClassroomController extends Controller
+{
+    /**
+     * Display a listing of the classrooms.
+     */
+    public function index()
+    {
+        $classrooms = Classroom::with(['course', 'semester.academicYear', 'teacher'])->paginate(10);
+        $courses = Course::all();
+        $academicYears = AcademicYear::all();
+        $semesters = Semester::with('academicYear')->get();
+        $teachers = Teacher::with(['department', 'degree'])->get();
+
+        return Inertia::render('Classrooms', [
+            'classrooms' => $classrooms,
+            'courses' => $courses,
+            'academicYears' => $academicYears,
+            'semesters' => $semesters,
+            'teachers' => $teachers,
+            'filters' => [] // Empty filters for initial load
+        ]);
+    }
+
+    /**
+     * Filter classrooms by academic year, semester, and course.
+     */
+    public function filter(Request $request)
+    {
+        $query = Classroom::with(['course', 'semester.academicYear', 'teacher']);
+
+        // Filter by academic year if provided
+        if ($request->filled('academicYear_id')) {
+            $query->whereHas('semester', function($q) use ($request) {
+                $q->where('academicYear_id', $request->academicYear_id);
+            });
+        }
+
+        // Filter by semester if provided
+        if ($request->filled('semester_id')) {
+            $query->where('semester_id', $request->semester_id);
+        }
+
+        // Filter by course if provided
+        if ($request->filled('course_id')) {
+            $query->where('course_id', $request->course_id);
+        }
+        
+        // Filter by teacher if provided
+        if ($request->filled('teacher_id')) {
+            $query->where('teacher_id', $request->teacher_id);
+        }
+
+        $classrooms = $query->paginate(10)->withQueryString();
+        
+        $courses = Course::all();
+        $academicYears = AcademicYear::all();
+        $semesters = Semester::with('academicYear')->get();
+        $teachers = Teacher::with(['department', 'degree'])->get();
+
+        return Inertia::render('Classrooms', [
+            'classrooms' => $classrooms,
+            'courses' => $courses,
+            'academicYears' => $academicYears,
+            'semesters' => $semesters,
+            'teachers' => $teachers,
+            'filters' => $request->only(['academicYear_id', 'semester_id', 'course_id', 'teacher_id'])
+        ]);
+    }
+
+    /**
+     * Store a newly created classroom in storage.
+     */
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'course_id' => 'required|exists:courses,id',
+                'semester_id' => 'required|exists:semesters,id',
+                'teacher_id' => 'required|exists:teachers,id',
+                'startTime' => 'required|date_format:H:i',
+                'endTime' => 'required|date_format:H:i|after:startTime',
+                'dayOfWeek' => 'required|integer|between:0,6', // 0=Sunday, 6=Saturday
+                'room' => 'required|string|max:50',
+                'maxStudents' => 'required|integer|min:1',
+            ]);
+            
+            $classroom = Classroom::create($validated);
+            
+            return redirect()->route('classrooms.index')
+                ->with('message', 'Lớp học đã được tạo thành công');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Không thể tạo lớp học: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Update the specified classroom in storage.
+     */
+    public function update(Request $request, Classroom $classroom)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'course_id' => 'required|exists:courses,id',
+                'semester_id' => 'required|exists:semesters,id',
+                'teacher_id' => 'required|exists:teachers,id',
+                'startTime' => 'required|date_format:H:i',
+                'endTime' => 'required|date_format:H:i|after:startTime',
+                'dayOfWeek' => 'required|integer|between:0,6',
+                'room' => 'required|string|max:50',
+                'maxStudents' => 'required|integer|min:1',
+            ]);
+            
+            $classroom->update($validated);
+            
+            return redirect()->route('classrooms.index')
+                ->with('message', 'Lớp học đã được cập nhật thành công');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Không thể cập nhật lớp học: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Remove the specified classroom from storage.
+     */
+    public function destroy(Classroom $classroom)
+    {
+        try {
+            // Check for any dependent relationships
+            // if ($classroom->students()->count() > 0) {
+            //     throw new Exception('Không thể xóa lớp học này vì đã có sinh viên đăng ký');
+            // }
+            
+            $classroom->delete();
+            return redirect()->route('classrooms.index')
+                ->with('message', 'Lớp học đã được xóa thành công');
+        } catch (\Exception $e) {
+            return redirect()->route('classrooms.index')
+                ->with('error', 'Không thể xóa lớp học: ' . $e->getMessage());
+        }
+    }
+}
