@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->date('startDate');
             $table->date('endDate');
-            $table->foreignId('academicYear_id')->constrained('academicYears')->onDelete('restrict');
+            $table->foreignId('academicYear_id')->constrained('academic_years')->onDelete('restrict');
             $table->timestamps();
         });
     }

@@ -12,8 +12,11 @@ class AcademicYear extends Model
         'startDate',
         'endDate',
     ];
-
-    public function academic_years(){
-        return $this.hasMany(Semester::class, 'academicYear_id');
+    protected $casts = [
+        'startDate' => 'date:Y-m-d',  // This ensures consistent format
+        'endDate' => 'date:Y-m-d',
+    ];
+    public function semesters(){
+        return $this->hasMany(Semester::class, 'academicYear_id');
     }
 }

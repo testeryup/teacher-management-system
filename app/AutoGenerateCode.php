@@ -1,6 +1,7 @@
 <?php
 
 namespace App;
+
 use Illuminate\Support\Facades\DB;
 
 trait AutoGenerateCode
@@ -8,18 +9,27 @@ trait AutoGenerateCode
     public static function bootAutoGenerateCode()
     {
         static::creating(function ($model) {
-            $prefix = $model->codePrefix ?? 'XX'; // VD: GV, MH, LH
-            $column = $model->codeColumn ?? 'code'; // Mặc định là 'code'
+            // Only generate if code is not already set
+            $column = $model->codeColumn ?? 'code';
+            
+            if (!empty($model->$column)) {
+                return; // Code already set, skip auto-generation
+            }
 
+            $prefix = $model->codePrefix ?? 'XX';
+            
+            // Get the last code with this prefix
             $lastCode = DB::table($model->getTable())
                 ->select($column)
-                ->where($column, 'like', "$prefix%")
+                ->where($column, 'like', $prefix . '%')
                 ->orderByDesc($column)
                 ->first();
 
-            $nextNumber = $lastCode
-                ? intval(substr($lastCode->$column, strlen($prefix))) + 1
-                : 1;
+            $nextNumber = 1;
+            if ($lastCode) {
+                $currentNumber = intval(substr($lastCode->$column, strlen($prefix)));
+                $nextNumber = $currentNumber + 1;
+            }
 
             $model->$column = $prefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
         });

@@ -8,7 +8,7 @@ use App\Http\Controllers\DegreeController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AcademicYearController;
-use App\Http\Controllers\SemesterYearController;
+use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ClassroomController;
 
@@ -54,22 +54,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/academicyears', [AcademicYearController::class, 'index'])->name('academicyears.index');
     Route::post('/academicyears', [AcademicYearController::class, 'store'])->name('academicyears.store');
     Route::delete('/academicyears/{academicyear}', [AcademicYearController::class, 'destroy'])->name('academicyears.destroy');
-    // Route::put('/academicyears/{academicyear}', [AcademicYearController::class, 'update'])->name('academicyears.update');
+    Route::put('/academicyears/{academicyear}', [AcademicYearController::class, 'update'])->name('academicyears.update');
 
     Route::get('/semesters', [SemesterController::class, 'index'])->name('semesters.index');
     Route::post('/semesters', [SemesterController::class, 'store'])->name('semesters.store');
     Route::delete('/semesters/{semester}', [SemesterController::class, 'destroy'])->name('semesters.destroy');
-    // Route::put('/semesters/{semester}', [TeacherController::class, 'update'])->name('semesters.update');
+    Route::put('/semesters/{semester}', [SemesterController::class, 'update'])->name('semesters.update');
 
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
     Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
     Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
-    // Route::put('/teachers/{teacher}', [TeacherController::class, 'update'])->name('courses.update');
-
+    // Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+    
     Route::get('/classrooms', [ClassroomController::class, 'index'])->name('classrooms.index');
     Route::post('/classrooms', [ClassroomController::class, 'store'])->name('classrooms.store');
     Route::delete('/classrooms/{classroom}', [ClassroomController::class, 'destroy'])->name('classrooms.destroy');
     Route::put('/classrooms/{classroom}', [ClassroomController::class, 'update'])->name('classrooms.update');
+    Route::get('/classrooms/filter', [ClassroomController::class, 'filter'])->name('classrooms.filter');
 });
 
 require __DIR__.'/settings.php';

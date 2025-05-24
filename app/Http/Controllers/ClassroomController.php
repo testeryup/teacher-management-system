@@ -23,7 +23,12 @@ class ClassroomController extends Controller
         $academicYears = AcademicYear::all();
         $semesters = Semester::with('academicYear')->get();
         $teachers = Teacher::with(['department', 'degree'])->get();
-
+        // \Log::info("Classrooms data:", $classrooms->toArray());
+        // \Log::info("Courses data:", $courses->toArray());
+        // \Log::info("Academic Years data:", $academicYears->toArray());
+        // \Log::info("Semesters data:", $semesters->toArray());
+        // \Log::info("Teachers data:", $teachers->toArray());
+        // \Log()
         return Inertia::render('Classrooms', [
             'classrooms' => $classrooms,
             'courses' => $courses,
@@ -88,15 +93,17 @@ class ClassroomController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'course_id' => 'required|exists:courses,id',
-                'semester_id' => 'required|exists:semesters,id',
-                'teacher_id' => 'required|exists:teachers,id',
-                'startTime' => 'required|date_format:H:i',
-                'endTime' => 'required|date_format:H:i|after:startTime',
-                'dayOfWeek' => 'required|integer|between:0,6', // 0=Sunday, 6=Saturday
-                'room' => 'required|string|max:50',
-                'maxStudents' => 'required|integer|min:1',
+                'semester_id' => 'required|integer|exists:semesters,id',
+                'course_id' => 'required|integer|exists:semesters,id',
+                'teacher_id' => 'nullable|integer|exists:semesters,id',
+                'students' => 'required|integer|min:0|max:200',
             ]);
+            
+            // Tạo code tự động
+            // $course = Course::find($validated['course_id']);
+            // $semester = Semester::find($validated['semester_id']);
+            
+            // $validated['code'] = $course->code . '-' . $semester->name . '-' . time();
             
             $classroom = Classroom::create($validated);
             
@@ -117,16 +124,11 @@ class ClassroomController extends Controller
     public function update(Request $request, Classroom $classroom)
     {
         try {
+            // Chỉ cho phép sửa name, teacher_id và students theo yêu cầu
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'course_id' => 'required|exists:courses,id',
-                'semester_id' => 'required|exists:semesters,id',
                 'teacher_id' => 'required|exists:teachers,id',
-                'startTime' => 'required|date_format:H:i',
-                'endTime' => 'required|date_format:H:i|after:startTime',
-                'dayOfWeek' => 'required|integer|between:0,6',
-                'room' => 'required|string|max:50',
-                'maxStudents' => 'required|integer|min:1',
+                'students' => 'required|integer|min:0',
             ]);
             
             $classroom->update($validated);

@@ -4,20 +4,16 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, PackageSearch, Hospital,UsersRound, GraduationCap } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, GitFork, Hospital,UsersRound, 
+    GraduationCap, Notebook, LandPlot, CalendarCog  } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Tổng quan',
         href: '/dashboard',
         icon: LayoutGrid,
     },
-    // {
-    //     title: 'Products',
-    //     href: '/products',
-    //     icon: PackageSearch,
-    // },
     {
         title: 'Khoa',
         href: '/departments',
@@ -33,6 +29,27 @@ const mainNavItems: NavItem[] = [
         href: '/teachers',
         icon: UsersRound,
     },
+    {
+        title: 'Năm học',
+        href: '/academicyears',
+        icon: CalendarCog,
+    },
+    {
+        title: 'Khoá học',
+        href: '/courses',
+        icon: LandPlot,
+    },
+    {
+        title: 'Lớp học',
+        href: '/classrooms',
+        icon: Notebook,
+    },
+    {
+        title: 'Phân công',
+        href: '/assignments',
+        icon: GitFork,
+    },
+
 ];
 
 const footerNavItems: NavItem[] = [

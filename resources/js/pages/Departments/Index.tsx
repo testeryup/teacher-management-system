@@ -110,7 +110,7 @@ export default function Index({ departments }: CustomPageProps) {
             <div className='m-4'>
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="outline" className='hover:cursor-pointer'>Thêm khoa mới</Button>
+                        <Button variant="default" className='hover:cursor-pointer'>Thêm khoa mới</Button>
                     </SheetTrigger>
                     <SheetContent>
                         <SheetHeader>

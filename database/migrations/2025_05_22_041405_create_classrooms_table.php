@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('code')->unique();
             $table->integer('students');
-            $table->foreignId('semester_id')->constrained('Semesters')->onDelete('restrict');
-            $table->foreignId('course_id')->constrained('Courses')->onDelete('restrict');
+            $table->foreignId('semester_id')->constrained('semesters')->onDelete('restrict');
+            $table->foreignId('course_id')->constrained('courses')->onDelete('restrict');
 
             $table->timestamps();
         });

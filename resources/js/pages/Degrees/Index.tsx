@@ -163,7 +163,7 @@ export default function Index({ degrees }: CustomPageProps) {
             <div className='m-4'>
                 <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
                     <SheetTrigger asChild>
-                        <Button variant="outline" className='hover:cursor-pointer'>Thêm bằng cấp mới</Button>
+                        <Button variant="default" className='hover:cursor-pointer'>Thêm bằng cấp mới</Button>
                     </SheetTrigger>
                     <SheetContent>
                         <SheetHeader>

@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Schema::table('degrees', function (Blueprint $table) {
-        //     $table->dropColumn('issueDate');
-        // });
+        Schema::table('courses', function (Blueprint $table) {
+            $table->string('name')->unique()->after('id');
+        });
     }
 
     /**
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('degrees', function (Blueprint $table) {
-            $table->date('issueDate')->nullable(); 
+        Schema::table('courses', function (Blueprint $table) {
+            $table->dropColumn('name');
         });
     }
 };

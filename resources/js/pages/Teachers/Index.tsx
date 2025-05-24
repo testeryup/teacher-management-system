@@ -193,7 +193,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
             <div className='m-4'>
                 <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
                     <SheetTrigger asChild>
-                        <Button variant="outline" className='hover:cursor-pointer'>Thêm giáo viên mới</Button>
+                        <Button variant="default" className='hover:cursor-pointer'>Thêm giáo viên mới</Button>
                     </SheetTrigger>
                     <SheetContent>
                         <SheetHeader>
