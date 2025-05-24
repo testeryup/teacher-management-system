@@ -14,50 +14,62 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-const chartData = [
-    { browser: "chrome", visitors: 275, fill: "var(--chart-1)" },
-    { browser: "safari", visitors: 200, fill: "var(--chart-2)" },
-    { browser: "firefox", visitors: 187, fill: "var(--chart-3)" },
-    { browser: "edge", visitors: 173, fill: "var(--chart-4)" },
-    { browser: "other", visitors: 90, fill: "var(--chart-5)" },
-]
+
+interface PieChartData {
+    name: string;
+    value: number;
+}
+
+interface PieChartComponentProps {
+    data: PieChartData[];
+}
+
+const COLORS = [
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))",
+];
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  chrome: {
-    label: "Chrome",
-    color: "hsl(var(--chart-1))",
-  },
-  safari: {
-    label: "Safari",
-    color: "hsl(var(--chart-2))",
-  },
-  firefox: {
-    label: "Firefox",
-    color: "hsl(var(--chart-3))",
-  },
-  edge: {
-    label: "Edge",
-    color: "hsl(var(--chart-4))",
-  },
-  other: {
-    label: "Other",
-    color: "hsl(var(--chart-5))",
-  },
+    value: {
+        label: "Số lượng",
+    },
 } satisfies ChartConfig
 
-export function PieChartComponent() {
+export function PieChartComponent({ data = [] }: PieChartComponentProps) {
+    // Thêm màu sắc cho từng mục dữ liệu
+    const chartData = data.map((item, index) => ({
+        ...item,
+        fill: COLORS[index % COLORS.length],
+    }));
+
+    if (data.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-full text-gray-500">
+                Không có dữ liệu
+            </div>
+        );
+    }
+
     return (
         <ChartContainer
             config={chartConfig}
             className="mx-auto aspect-square max-h-[300px]"
         >
             <PieChart>
-                <Pie data={chartData} dataKey="visitors" nameKey="browser" label />
+                <Pie 
+                    data={chartData} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    cx="50%" 
+                    cy="50%" 
+                    outerRadius={80} 
+                    label={({ name, value }) => `${name}: ${value}`}
+                />
                 <ChartLegend
-                    content={<ChartLegendContent nameKey="browser" />}
+                    content={<ChartLegendContent nameKey="name" />}
                     className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
                 />
             </PieChart>

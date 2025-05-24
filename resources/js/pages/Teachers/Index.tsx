@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { toast } from 'sonner';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { calculateAge, isValidTeacherAge, formatPhoneNumber, isValidPhoneNumber } from '@/utils/dateUtils';
 import {
     Sheet,
     SheetClose,
@@ -128,6 +129,19 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
     };
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Validate age before submitting
+        if (data.DOB && !isValidTeacherAge(data.DOB)) {
+            toast.error('Tuổi giáo viên phải từ 20 đến 50 tuổi');
+            return;
+        }
+        
+        // Validate phone number
+        if (data.phone && !isValidPhoneNumber(data.phone)) {
+            toast.error('Số điện thoại không hợp lệ (10-11 số)');
+            return;
+        }
+        
         if (!isUpdate) {
             post(route('teachers.store'), {
                 onSuccess: () => {
@@ -223,6 +237,13 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                                 <div className="grid gap-2">
                                     <Label htmlFor="DOB">
                                         Ngày tháng năm sinh
+                                        {data.DOB && (
+                                            <span className="ml-2 text-sm text-gray-500">
+                                                (Tuổi: {calculateAge(data.DOB)} - {isValidTeacherAge(data.DOB) ? 
+                                                    <span className="text-green-600">Hợp lệ</span> : 
+                                                    <span className="text-red-600">Phải từ 20-50 tuổi</span>})
+                                            </span>
+                                        )}
                                     </Label>
                                     <Input
                                         id="DOB"
@@ -238,12 +259,24 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                                 <div className="grid gap-2">
                                     <Label htmlFor="phone">
                                         Số điện thoại
+                                        {data.phone && (
+                                            <span className="ml-2 text-sm text-gray-500">
+                                                ({isValidPhoneNumber(data.phone) ? 
+                                                    <span className="text-green-600">Hợp lệ</span> : 
+                                                    <span className="text-red-600">Chỉ số, 10 ký tự</span>})
+                                            </span>
+                                        )}
                                     </Label>
                                     <Input
                                         id="phone"
                                         value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
+                                        onChange={(e) => {
+                                            const numericValue = formatPhoneNumber(e.target.value);
+                                            setData('phone', numericValue);
+                                        }}
                                         className="w-full"
+                                        placeholder="0123456789"
+                                        maxLength={11}
                                     />
                                     {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
                                 </div>
@@ -348,33 +381,35 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                         </TableHeader>
                         <TableBody>
                             {
-                                teachers.map((teacher) => (
-                                    <TableRow key={teacher.id}>
-                                        <TableCell className="font-medium">{teacher.id}</TableCell>
-                                        <TableCell>{teacher.fullName}</TableCell>
-                                        <TableCell>
-                                            {teacher.DOB
-                                                ? new Date(teacher.DOB).toLocaleDateString('vi-VN')
-                                                : ''}
-                                        </TableCell>
-                                        <TableCell>{teacher.phone}</TableCell>
-                                        <TableCell>{teacher.email}</TableCell>
-                                        <TableCell>{teacher.department?.abbrName || '-'}</TableCell>
-                                        <TableCell>{teacher.degree?.name || '-'}</TableCell>
-                                        <TableCell className="text-center space-x-2">
-                                            <Button
-                                                disabled={processing}
-                                                onClick={() => handleUpdate(teacher)}
-                                                className='bg-yellow-500 hover:bg-yellow-700 hover:cursor-pointer'
-                                            >Sửa</Button>
-                                            <Button
-                                                disabled={processing}
-                                                onClick={() => handleDelete(teacher.id, teacher.fullName)}
-                                                className="bg-red-500 hover:bg-red-700 hover:cursor-pointer"
-                                            >Xoá</Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                teachers.map((teacher) => {
+                                    return (
+                                        <TableRow key={teacher.id}>
+                                            <TableCell className="font-medium">{teacher.id}</TableCell>
+                                            <TableCell>{teacher.fullName}</TableCell>
+                                            <TableCell>
+                                                {teacher.DOB
+                                                    ? new Date(teacher.DOB).toLocaleDateString('vi-VN')
+                                                    : ''}
+                                            </TableCell>
+                                            <TableCell>{teacher.phone}</TableCell>
+                                            <TableCell>{teacher.email}</TableCell>
+                                            <TableCell>{teacher.department?.abbrName || '-'}</TableCell>
+                                            <TableCell>{teacher.degree?.name || '-'}</TableCell>
+                                            <TableCell className="text-center space-x-2">
+                                                <Button
+                                                    disabled={processing}
+                                                    onClick={() => handleUpdate(teacher)}
+                                                    className='bg-yellow-500 hover:bg-yellow-700 hover:cursor-pointer'
+                                                >Sửa</Button>
+                                                <Button
+                                                    disabled={processing}
+                                                    onClick={() => handleDelete(teacher.id, teacher.fullName)}
+                                                    className="bg-red-500 hover:bg-red-700 hover:cursor-pointer"
+                                                >Xoá</Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })
                             }
                         </TableBody>
                     </Table>
