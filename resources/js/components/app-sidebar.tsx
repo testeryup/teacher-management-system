@@ -32,23 +32,23 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Năm học',
         href: '/academicyears',
-        icon: CalendarCog,
+        icon: LandPlot,
     },
     {
         title: 'Khoá học',
         href: '/courses',
-        icon: LandPlot,
+        icon: Notebook,
     },
     {
         title: 'Lớp học',
         href: '/classrooms',
-        icon: Notebook,
-    },
-    {
-        title: 'Phân công',
-        href: '/assignments',
         icon: GitFork,
     },
+    // {
+    //     title: 'Phân công',
+    //     href: '/assignments',
+    //     icon: GitFork,
+    // },
 
 ];
 

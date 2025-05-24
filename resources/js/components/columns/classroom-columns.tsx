@@ -121,17 +121,20 @@ export const createClassroomColumns = ({ onEdit, onDelete }: ClassroomColumnsPro
     },
     cell: ({ row }) => {
       const count = row.getValue("students") as number
-      return <div className="text-center font-medium">{count}</div>
+      return <div className="text-left px-3 font-medium">{count}</div>
     },
   },
   {
     id: "actions",
+  header: () => <div className="text-center">Hành động</div>, // Center the header
     enableHiding: false,
+
     cell: ({ row }) => {
       const classroom = row.original
 
       return (
-        <DropdownMenu>
+        <div className="flex justify-center">
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Mở menu</span>
@@ -159,6 +162,7 @@ export const createClassroomColumns = ({ onEdit, onDelete }: ClassroomColumnsPro
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       )
     },
   },

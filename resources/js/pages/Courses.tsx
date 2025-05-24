@@ -106,10 +106,10 @@ export const columns: ColumnDef<Course>[] = [
     },
     {
         id: "actions",
-        header: "Hành động",
+        header: () => <div className="text-center">Hành động</div>,
         cell: ({ row }) => {
             const course = row.original;
-            return <CourseActions course={course} />;
+            return <CourseActions course={course}/>;
         },
     },
 ];
@@ -139,7 +139,7 @@ function CourseActions({ course }: { course: Course }) {
     };
 
     return (
-        <>
+        <div className='text-center'>
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -190,7 +190,7 @@ function CourseActions({ course }: { course: Course }) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </>
+        </div>
     );
 }
 
