@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { PieChartComponent } from "@/components/charts/PieChartComponent"
 import BarChartComponent from "@/components/charts/BarChartComponent";
+
 import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -120,6 +121,32 @@ export default function Dashboard() {
         value: degree.teachers_count,
     })) || [];
 
+    // Dữ liệu cho biểu đồ donut phân bố khoa
+    const departmentDonutData = data?.departments.map((dept) => ({
+        name: dept.name,
+        value: dept.teachers_count,
+    })) || [];
+
+    // Dữ liệu cho biểu đồ area - thống kê lớp học
+    const classroomAreaData = data?.classroom_stats?.map((stat) => ({
+        name: stat.course_name.length > 15 ? stat.course_name.substring(0, 15) + '...' : stat.course_name,
+        classes: stat.class_count,
+        students: stat.total_students,
+    })) || [];
+
+    // Dữ liệu mẫu cho biểu đồ line - xu hướng theo học kỳ
+    const trendData = data?.semesters?.map((semester) => {
+        const semesterStats = data.classroom_stats?.filter(stat => 
+            stat.semester_name === semester.name
+        ) || [];
+        
+        return {
+            period: `${semester.name} - ${semester.academicYear?.name}`,
+            teachers: data.total_teachers || 0,
+            classes: semesterStats.reduce((sum, stat) => sum + stat.class_count, 0),
+        };
+    }) || [];
+
     if (loading) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -139,44 +166,35 @@ export default function Dashboard() {
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 {/* Thống kê tổng quan */}
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+                <div className="grid auto-rows-min gap-4 md:grid-cols-1">
+                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative overflow-hidden rounded-xl border flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6">
                         <div className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Tổng số giáo viên</div>
                         <div className="text-4xl font-bold text-blue-600 dark:text-blue-400">{data?.total_teachers || 0}</div>
                     </div>
-                    
-                    {/* Phân bố theo bằng cấp */}
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative overflow-hidden rounded-xl border">
-                        <div className="p-4">
-                            <div className="text-lg font-semibold mb-3">Phân bố theo bằng cấp</div>
-                            <div className="space-y-2 max-h-48 overflow-y-auto">
-                                {data?.degrees.map((degree) => (
-                                    <div key={degree.id} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                                        <span className="text-sm font-medium">{degree.name}</span>
-                                        <span className="text-sm bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">
-                                            {degree.teachers_count} người
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                </div>
+
+                
+
+                {/* Biểu đồ phân tích */}
+                <div className="grid auto-rows-min gap-4 md:grid-cols-2">
+                    {/* Biểu đồ 1: Biểu đồ cột - Phân bố theo bằng cấp */}
+                    <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border">
+                        <BarChartComponent 
+                            data={degreeChartData.map(degree => ({
+                                department: degree.name,
+                                employees: degree.value
+                            }))}
+                            title="Phân bố giáo viên theo bằng cấp"
+                            color="#4e73df"
+                        />
                     </div>
-                    
-                    {/* Phân bố theo khoa */}
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative overflow-hidden rounded-xl border">
-                        <div className="p-4">
-                            <div className="text-lg font-semibold mb-3">Phân bố theo khoa</div>
-                            <div className="space-y-2 max-h-48 overflow-y-auto">
-                                {data?.departments.map((dept) => (
-                                    <div key={dept.id} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                                        <span className="text-sm font-medium">{dept.name}</span>
-                                        <span className="text-sm bg-green-100 dark:bg-green-800 px-2 py-1 rounded">
-                                            {dept.teachers_count} người
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+
+                    {/* Biểu đồ 2: Biểu đồ tròn - Phân bố giáo viên theo khoa */}
+                    <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border">
+                        <PieChartComponent 
+                            data={departmentDonutData}
+                            title="Phân bố giáo viên theo khoa"
+                        />
                     </div>
                 </div>
 
@@ -221,6 +239,36 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </div>
+
+                {/* Biểu đồ tròn - Phân bố giáo viên đã lọc */}
+                {(selectedDepartment || selectedDegree) && (
+                    <div className="border-sidebar-border/70 dark:border-sidebar-border rounded-xl border p-4">
+                        <h3 className="text-lg font-semibold mb-4">Kết quả lọc</h3>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <PieChartComponent 
+                                    data={[
+                                        { name: "Đã lọc", value: filteredTeachers.length },
+                                        { name: "Còn lại", value: (data?.total_teachers || 0) - filteredTeachers.length }
+                                    ]}
+                                />
+                            </div>
+                            <div className="flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                                        {filteredTeachers.length}
+                                    </div>
+                                    <div className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Giáo viên được lọc
+                                    </div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        Trên tổng số {data?.total_teachers || 0} giáo viên
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 
 

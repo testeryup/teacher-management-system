@@ -94,21 +94,42 @@ class ClassroomController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'semester_id' => 'required|integer|exists:semesters,id',
-                'course_id' => 'required|integer|exists:semesters,id',
-                'teacher_id' => 'nullable|integer|exists:semesters,id',
+                'course_id' => 'required|integer|exists:courses,id',
+                'teacher_id' => 'nullable|integer|exists:teachers,id',
                 'students' => 'required|integer|min:0|max:200',
+                'class_count' => 'nullable|integer|min:1|max:50',
             ]);
             
-            // Tạo code tự động
-            // $course = Course::find($validated['course_id']);
-            // $semester = Semester::find($validated['semester_id']);
+            $classCount = $validated['class_count'] ?? 1;
+            $baseName = $validated['name'];
             
-            // $validated['code'] = $course->code . '-' . $semester->name . '-' . time();
+            // Remove class_count from validated data as it's not a database field
+            unset($validated['class_count']);
             
-            $classroom = Classroom::create($validated);
+            $createdClassrooms = [];
+            
+            // Create multiple classrooms if class_count > 1
+            for ($i = 1; $i <= $classCount; $i++) {
+                $classroomData = $validated;
+                
+                if ($classCount > 1) {
+                    // Format: "Course Name (N01)", "Course Name (N02)", etc.
+                    $suffix = ' (N' . str_pad($i, 2, '0', STR_PAD_LEFT) . ')';
+                    $classroomData['name'] = $baseName . $suffix;
+                } else {
+                    $classroomData['name'] = $baseName;
+                }
+                
+                $classroom = Classroom::create($classroomData);
+                $createdClassrooms[] = $classroom;
+            }
+            
+            $successMessage = $classCount > 1 
+                ? "Đã tạo thành công {$classCount} lớp học"
+                : 'Lớp học đã được tạo thành công';
             
             return redirect()->route('classrooms.index')
-                ->with('message', 'Lớp học đã được tạo thành công');
+                ->with('message', $successMessage);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {

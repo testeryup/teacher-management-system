@@ -77,6 +77,7 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
         semester_id: null as number | null,
         teacher_id: null as number | null,
         students: 0,
+        class_count: 1,
     });
 
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -118,7 +119,10 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
         if (!isUpdate) {
             post(route('classrooms.store'), {
                 onSuccess: () => {
-                    toast.success('Thêm lớp học mới thành công');
+                    const successMessage = data.class_count > 1 
+                        ? `Thêm thành công ${data.class_count} lớp học mới`
+                        : 'Thêm lớp học mới thành công';
+                    toast.success(successMessage);
                     reset();
                     setSheetOpen(false);
                 },
@@ -154,6 +158,7 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
             semester_id: classroom.semester.id,
             teacher_id: classroom.teacher.id,
             students: classroom.students,
+            class_count: 1, // Default to 1 for updates
         });
         setPendingUpdateId(classroom.id);
         setSheetOpen(true);
@@ -209,9 +214,37 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
                                         className="w-full"
+                                        placeholder={!isUpdate ? "VD: N (sẽ tạo N01, N02, ...)" : ""}
                                     />
                                     {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
                                 </div>
+
+                                {/* Số lớp mở - chỉ hiện khi thêm mới */}
+                                {!isUpdate && (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="class_count">
+                                            Số lớp mở
+                                        </Label>
+                                        <Input
+                                            id="class_count"
+                                            type="number"
+                                            min="1"
+                                            max="50"
+                                            value={data.class_count}
+                                            onChange={(e) => setData('class_count', parseInt(e.target.value) || 1)}
+                                            className="w-full"
+                                        />
+                                        {data.name && data.class_count > 1 && (
+                                            <p className="text-sm text-blue-600">
+                                                Xem trước: {Array.from({ length: Math.min(data.class_count, 5) }, (_, i) => (
+                                                    data.name + ' (N' + String(i + 1).padStart(2, '0') + ')'
+                                                )).join(', ')}
+                                                {data.class_count > 5 && '...'}
+                                            </p>
+                                        )}
+                                        {errors.class_count && <p className="text-sm text-red-500">{errors.class_count}</p>}
+                                    </div>
+                                )}
 
                                 {/* Học kỳ */}
                                 <div className="grid gap-2">
