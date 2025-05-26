@@ -17,8 +17,16 @@ class DegreeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'baseSalaryFactor' => 'required|numeric|min:0',
+            'name' => 'required|string|max:255|unique:degrees,name',
+            'baseSalaryFactor' => 'required|numeric|min:1.0|max:2.0',
+        ], [
+            'name.required' => 'Tên bằng cấp là bắt buộc',
+            'name.unique' => 'Tên bằng cấp đã tồn tại trong hệ thống',
+            'name.max' => 'Tên bằng cấp không được vượt quá 255 ký tự',
+            'baseSalaryFactor.min' => 'Hệ số lương phải tối thiểu là 1.0',
+            'baseSalaryFactor.max' => 'Hệ số lương phải tối đa là 2.0',
+            'baseSalaryFactor.required' => 'Hệ số lương là bắt buộc',
+            'baseSalaryFactor.numeric' => 'Hệ số lương phải là số',
         ]);
         
         Degree::create($validated);
@@ -41,15 +49,20 @@ class DegreeController extends Controller
     }
 
     public function update(Request $request, Degree $degree){
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'baseSalaryFactor' => 'required|numeric|min:0',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:degrees,name,' . $degree->id,
+            'baseSalaryFactor' => 'required|numeric|min:1.0|max:2.0',
+        ], [
+            'name.required' => 'Tên bằng cấp là bắt buộc',
+            'name.unique' => 'Tên bằng cấp đã tồn tại trong hệ thống',
+            'name.max' => 'Tên bằng cấp không được vượt quá 255 ký tự',
+            'baseSalaryFactor.min' => 'Hệ số lương phải tối thiểu là 1.0',
+            'baseSalaryFactor.max' => 'Hệ số lương phải tối đa là 2.0',
+            'baseSalaryFactor.required' => 'Hệ số lương là bắt buộc',
+            'baseSalaryFactor.numeric' => 'Hệ số lương phải là số',
         ]);
 
-        $degree->update([
-            'name' => $request->input('name'),
-            'baseSalaryFactor' => $request->input('baseSalaryFactor'),
-        ]);
+        $degree->update($validated);
         return redirect()->route('degrees.index')->with('message', 'Chỉnh sửa bằng cấp thành công');
     }
 }

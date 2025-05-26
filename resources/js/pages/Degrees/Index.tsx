@@ -70,7 +70,7 @@ export default function Index({ degrees }: CustomPageProps) {
     const flash = page.props?.flash as CustomPageProps['flash'];
     const { data, setData, post, processing, errors, reset, delete: destroy, put } = useForm({
         name: '',
-        baseSalaryFactor: 0.00,
+        baseSalaryFactor: 1.0,
         // specialization: ''
     });
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -79,6 +79,40 @@ export default function Index({ degrees }: CustomPageProps) {
     const [pendingUpdateId, setPendingUpdateId] = useState<number | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpdate, setIsUpdate] = useState(false);
+    const [localErrors, setLocalErrors] = useState<{[key: string]: string}>({});
+    
+    const validateForm = () => {
+        const newErrors: {[key: string]: string} = {};
+        
+        if (!data.name.trim()) {
+            newErrors.name = 'Tên bằng cấp là bắt buộc';
+        } else {
+            // Check for duplicate name
+            const trimmedName = data.name.trim().toLowerCase();
+            const existingDegree = degrees.find(degree => {
+                // For update, exclude current degree from check
+                if (isUpdate && degree.id === pendingUpdateId) {
+                    return false;
+                }
+                return degree.name.toLowerCase() === trimmedName;
+            });
+            
+            if (existingDegree) {
+                newErrors.name = 'Tên bằng cấp đã tồn tại trong hệ thống';
+            }
+        }
+        
+        if (data.baseSalaryFactor < 1.0 || data.baseSalaryFactor > 2.0) {
+            newErrors.baseSalaryFactor = 'Hệ số lương phải từ 1.0 đến 2.0';
+        }
+        
+        if (data.baseSalaryFactor === 0) {
+            newErrors.baseSalaryFactor = 'Hệ số lương không được để trống hoặc bằng 0';
+        }
+        
+        setLocalErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
     const handleDelete = (id: number, name: string) => {
         setPendingDeleteId(id);
         setPendingDeleteName(name);
@@ -105,16 +139,26 @@ export default function Index({ degrees }: CustomPageProps) {
     };
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Clear any existing local errors
+        setLocalErrors({});
+        
+        // Validate form before submission
+        if (!validateForm()) {
+            toast.error('Vui lòng kiểm tra lại thông tin đã nhập');
+            return;
+        }
+        
         if (!isUpdate) {
             post(route('degrees.store'), {
                 onSuccess: () => {
                     toast.success('Thêm bằng cấp mới thành công');
                     reset();
                     setSheetOpen(false);
+                    setLocalErrors({});
                 },
                 onError: () => {
                     toast.error('Thêm bằng cấp mới thất bại');
-                    reset();
                 }
             })
         }
@@ -126,10 +170,10 @@ export default function Index({ degrees }: CustomPageProps) {
                         reset();
                         setSheetOpen(false);
                         setIsUpdate(false);
+                        setLocalErrors({});
                     },
                     onError: () => {
                         toast.error('Cập nhật bằng cấp thất bại');
-                        reset();
                         setIsUpdate(false);
                     }
                 });
@@ -154,6 +198,7 @@ export default function Index({ degrees }: CustomPageProps) {
             reset();
             setIsUpdate(false);
             setPendingUpdateId(null);
+            setLocalErrors({});
         }
     }
     return (
@@ -179,21 +224,56 @@ export default function Index({ degrees }: CustomPageProps) {
                                     <Label htmlFor="name" className="text-right">
                                         Tên bằng cấp
                                     </Label>
-                                    <Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} className="col-span-3" />
+                                    <div className="col-span-3">
+                                        <Input 
+                                            id="name" 
+                                            value={data.name} 
+                                            onChange={(e) => {
+                                                setData('name', e.target.value);
+                                                // Clear local errors when user starts typing
+                                                if (localErrors.name) {
+                                                    setLocalErrors(prev => ({...prev, name: ''}));
+                                                }
+                                            }} 
+                                            className={errors.name || localErrors.name ? "border-red-500" : ""} 
+                                        />
+                                        {(errors.name || localErrors.name) && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.name || localErrors.name}</p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="baseSalaryFactor" className="text-right">
                                         Hệ số lương
                                     </Label>
-                                    <Input
-                                        id="baseSalaryFactor"
-                                        value={data.baseSalaryFactor}
-                                        onChange={(e) => setData('baseSalaryFactor', parseFloat(e.target.value) || 0)}
-                                        className="col-span-3"
-                                        type='number'
-                                        step='0.1'
-                                        min='0'
-                                    />
+                                    <div className="col-span-3">
+                                        <Input
+                                            id="baseSalaryFactor"
+                                            value={data.baseSalaryFactor}
+                                            onChange={(e) => {
+                                                const value = parseFloat(e.target.value);
+                                                if (!isNaN(value)) {
+                                                    setData('baseSalaryFactor', value);
+                                                } else if (e.target.value === '') {
+                                                    setData('baseSalaryFactor', 1.0);
+                                                }
+                                                // Clear local errors when user starts typing
+                                                if (localErrors.baseSalaryFactor) {
+                                                    setLocalErrors(prev => ({...prev, baseSalaryFactor: ''}));
+                                                }
+                                            }}
+                                            className={`${errors.baseSalaryFactor || localErrors.baseSalaryFactor ? "border-red-500" : ""}`}
+                                            type='number'
+                                            step='0.1'
+                                            min='1.0'
+                                            max='2.0'
+                                            placeholder="1.0 - 2.0"
+                                        />
+                                        {(errors.baseSalaryFactor || localErrors.baseSalaryFactor) && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.baseSalaryFactor || localErrors.baseSalaryFactor}</p>
+                                        )}
+                                        <p className="text-xs text-gray-500 mt-1">Hệ số lương phải từ 1.0 đến 2.0</p>
+                                    </div>
                                 </div>
                                 {/* <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="issueDate" className="text-right">
