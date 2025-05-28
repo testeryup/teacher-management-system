@@ -39,6 +39,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { SimplePagination } from "@/components/ui/simple-pagination"
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -93,6 +94,12 @@ export default function Index({ academicYears }: CustomPageProps) {
     const page = usePage<PageProps>();
     const flash = page.props?.flash as CustomPageProps['flash'];
 
+    // Pagination state - using backend pagination
+    const [currentPage, setCurrentPage] = useState(academicYears.current_page);
+    const totalPages = academicYears.last_page;
+    const totalItems = academicYears.total;
+    const itemsPerPage = 10; // Assuming 10 items per page based on backend
+    
     const { data, setData, post, processing, errors, reset, delete: destroy, put } = useForm<AcademicYearFormData>({
         name: '',
         startDate: '',

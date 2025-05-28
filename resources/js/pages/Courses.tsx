@@ -53,6 +53,7 @@ interface Course {
     code: string;
     credits: number;
     lessons: number;
+    course_coefficient: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -103,6 +104,14 @@ export const columns: ColumnDef<Course>[] = [
     {
         accessorKey: "lessons",
         header: "Số tiết học",
+    },
+    {
+        accessorKey: "course_coefficient",
+        header: "Hệ số học phần",
+        cell: ({ row }) => {
+            const coefficient = row.getValue("course_coefficient") as number;
+            return <div className="text-center font-medium">{coefficient.toFixed(1)}</div>;
+        },
     },
     {
         id: "actions",
@@ -233,6 +242,7 @@ export default function Courses({ courses }: CustomPageProps) {
         name: '',
         credits: 1,
         lessons: 1,
+        course_coefficient: 1.0,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -311,6 +321,21 @@ export default function Courses({ courses }: CustomPageProps) {
                                             onChange={(e) => setData('lessons', parseInt(e.target.value) || 1)}
                                         />
                                         {errors.lessons && <p className="text-sm text-red-500">{errors.lessons}</p>}
+                                    </div>
+                                    
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="course_coefficient">Hệ số học phần</Label>
+                                        <Input
+                                            id="course_coefficient"
+                                            type="number"
+                                            min="1.0"
+                                            max="1.5"
+                                            step="0.1"
+                                            value={data.course_coefficient}
+                                            onChange={(e) => setData('course_coefficient', parseFloat(e.target.value) || 1.0)}
+                                        />
+                                        <p className="text-xs text-gray-500">Hệ số từ 1.0 đến 1.5 tùy theo độ khó của môn học</p>
+                                        {errors.course_coefficient && <p className="text-sm text-red-500">{errors.course_coefficient}</p>}
                                     </div>
                                 </div>
                             </form>

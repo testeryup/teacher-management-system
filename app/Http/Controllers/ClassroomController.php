@@ -18,7 +18,7 @@ class ClassroomController extends Controller
      */
     public function index()
     {
-        $classrooms = Classroom::with(['course', 'semester.academicYear', 'teacher'])->paginate(10);
+        $classrooms = Classroom::with(['course', 'semester.academicYear', 'teacher'])->get();
         $courses = Course::all();
         $academicYears = AcademicYear::all();
         $semesters = Semester::with('academicYear')->get();

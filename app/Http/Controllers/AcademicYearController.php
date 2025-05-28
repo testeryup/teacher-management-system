@@ -21,7 +21,7 @@ class AcademicYearController extends Controller
                 'name' => 'required|string|max:255',
                 'startDate' => 'required|date',
                 'endDate' => 'required|date|after:startDate',
-                'semesterCount' => 'required|integer|min:1|max:4',
+                'semesterCount' => 'required|integer|min:1|max:3',
             ]);
             
             $academicYear = AcademicYear::create([

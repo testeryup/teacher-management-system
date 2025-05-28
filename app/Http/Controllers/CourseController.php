@@ -23,6 +23,7 @@ class CourseController extends Controller
                 'name' => 'required|string|max:255',
                 'credits' => 'required|integer|min:1',
                 'lessons' => 'required|integer|min:1',
+                'course_coefficient' => 'nullable|numeric|between:1.0,1.5',
             ]);
 
             \Log::info('Validated data:', $validated);

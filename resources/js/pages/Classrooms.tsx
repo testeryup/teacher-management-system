@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Sheet,
     SheetClose,
@@ -27,6 +34,7 @@ import {
 import { toast, Toaster } from 'sonner';
 import { BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
+import { SimplePagination } from "@/components/ui/simple-pagination"
 import { createClassroomColumns, type Classroom } from '@/components/columns/classroom-columns';
 interface Teacher {
     id: number;
@@ -86,6 +94,14 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
     const [pendingUpdateId, setPendingUpdateId] = useState<number | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpdate, setIsUpdate] = useState(false);
+    
+    // Filter states
+    const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('all');
+    const [selectedSemester, setSelectedSemester] = useState<string>('all');
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const handleDelete = (id: number, name: string) => {
         setPendingDeleteId(id);
@@ -101,6 +117,8 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                     setIsDialogOpen(false);
                     setPendingDeleteId(null);
                     setPendingDeleteName('');
+                    // Reload trang ngay lập tức để cập nhật dữ liệu
+                    router.reload();
                 },
                 onError: (errors) => {
                     if (errors.reference) {
@@ -125,6 +143,8 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                     toast.success(successMessage);
                     reset();
                     setSheetOpen(false);
+                    // Reload trang ngay lập tức để cập nhật dữ liệu
+                    router.reload();
                 },
                 onError: (errors) => {
                     console.log('Errors:', errors);
@@ -140,6 +160,8 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                         setSheetOpen(false);
                         setIsUpdate(false);
                         setPendingUpdateId(null);
+                        // Reload trang ngay lập tức để cập nhật dữ liệu
+                        router.reload();
                     },
                     onError: (errors) => {
                         console.log('Update errors:', errors);
@@ -175,6 +197,71 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
 
     // HANDLE BOTH DATA FORMATS
     const classroomData = Array.isArray(classrooms) ? classrooms : classrooms.data || [];
+    
+    // Debug log to check data
+    console.log('Classrooms data:', classroomData);
+    console.log('Semesters:', semesters);
+    console.log('Academic Years:', academicYears);
+
+    // Filter data based on selected academic year and semester
+    const filteredClassroomData = React.useMemo(() => {
+        let filtered = classroomData;
+
+        if (selectedAcademicYear && selectedAcademicYear !== 'all') {
+            filtered = filtered.filter((classroom: Classroom) => 
+                classroom.semester.academic_year.name === selectedAcademicYear
+            );
+        }
+
+        if (selectedSemester && selectedSemester !== 'all') {
+            filtered = filtered.filter((classroom: Classroom) => 
+                classroom.semester.name === selectedSemester
+            );
+        }
+
+        return filtered;
+    }, [classroomData, selectedAcademicYear, selectedSemester]);
+
+    // Pagination calculations
+    const totalPages = Math.ceil(filteredClassroomData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentClassrooms = filteredClassroomData.slice(startIndex, endIndex);
+
+    // Debug pagination
+    console.log('Pagination Debug:', {
+        totalClassrooms: classroomData.length,
+        filteredClassrooms: filteredClassroomData.length,
+        itemsPerPage,
+        totalPages,
+        currentPage,
+        currentClassrooms: currentClassrooms.length
+    });
+
+    // Reset to page 1 when filters change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedAcademicYear, selectedSemester]);
+
+    // Get filtered semesters based on selected academic year
+    const filteredSemesters = React.useMemo(() => {
+        if (!selectedAcademicYear || selectedAcademicYear === 'all') return semesters;
+        return semesters.filter(semester => 
+            semester.academic_year.name === selectedAcademicYear
+        );
+    }, [semesters, selectedAcademicYear]);
+
+    // Reset semester when academic year changes
+    React.useEffect(() => {
+        if (selectedAcademicYear && selectedAcademicYear !== 'all') {
+            const availableSemesters = semesters.filter(semester => 
+                semester.academic_year.name === selectedAcademicYear
+            );
+            if (selectedSemester && selectedSemester !== 'all' && !availableSemesters.find(s => s.name === selectedSemester)) {
+                setSelectedSemester('all');
+            }
+        }
+    }, [selectedAcademicYear, semesters, selectedSemester]);
 
     // Tạo columns với callbacks
     const columns = createClassroomColumns({
@@ -340,13 +427,79 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                 </Sheet>
             </div>
 
+            {/* Filters Section */}
+            <div className="m-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
+                    <div className="min-w-[200px]">
+                        <Label htmlFor="academic-year-filter" className="text-sm font-medium mb-2 block">
+                            Năm học
+                        </Label>
+                        <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+                            <SelectTrigger id="academic-year-filter">
+                                <SelectValue placeholder="Tất cả năm học" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Tất cả năm học</SelectItem>
+                                {academicYears.map(year => (
+                                    <SelectItem key={year.id} value={year.name}>
+                                        {year.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="min-w-[200px]">
+                        <Label htmlFor="semester-filter" className="text-sm font-medium mb-2 block">
+                            Học kỳ
+                        </Label>
+                        <Select value={selectedSemester} onValueChange={setSelectedSemester}>
+                            <SelectTrigger id="semester-filter">
+                                <SelectValue placeholder="Tất cả học kỳ" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Tất cả học kỳ</SelectItem>
+                                {filteredSemesters.map(semester => (
+                                    <SelectItem key={semester.id} value={semester.name}>
+                                        {semester.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {(selectedAcademicYear && selectedAcademicYear !== 'all') || (selectedSemester && selectedSemester !== 'all') ? (
+                        <div className="flex items-end">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                    setSelectedAcademicYear('all');
+                                    setSelectedSemester('all');
+                                }}
+                                className="mb-0"
+                            >
+                                Xóa bộ lọc
+                            </Button>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+
             {/* DataTable thay thế cho Table thông thường */}
             <div className="m-4">
                 <DataTable
                     columns={columns}
-                    data={classroomData}
+                    data={currentClassrooms}
                     searchKey="name"
                     searchPlaceholder="Tìm kiếm theo tên lớp học..."
+                    disablePagination={true}
+                />
+                <SimplePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={filteredClassroomData.length}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
                 />
             </div>
 
@@ -366,8 +519,7 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                             Xác nhận
                         </AlertDialogAction>
                     </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                </AlertDialogContent>            </AlertDialog>
         </AppLayout>
     );
 }

@@ -18,6 +18,7 @@ class Course extends Model
         'code',
         'credits',
         'lessons',
+        'course_coefficient',
     ];
 
     public static function rules($id = null)
@@ -27,6 +28,7 @@ class Course extends Model
             'credits' => 'required|integer|min:1|max:10',
             'lessons' => 'required|integer|min:1|max:100',
             'code' => 'nullable|string|max:10|unique:courses,code' . ($id ? ",$id" : ''),
+            'course_coefficient' => 'nullable|numeric|between:1.0,1.5',
         ];
     }
     

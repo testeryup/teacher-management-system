@@ -40,6 +40,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { SimplePagination } from "@/components/ui/simple-pagination"
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -68,6 +69,15 @@ interface CustomPageProps {
 export default function Index({ degrees }: CustomPageProps) {
     const page = usePage<PageProps>();
     const flash = page.props?.flash as CustomPageProps['flash'];
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(degrees.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentDegrees = degrees.slice(startIndex, endIndex);
+    
     const { data, setData, post, processing, errors, reset, delete: destroy, put } = useForm({
         name: '',
         baseSalaryFactor: 1.0,
@@ -344,7 +354,7 @@ export default function Index({ degrees }: CustomPageProps) {
                         </TableHeader>
                         <TableBody>
                             {
-                                degrees.map((degree) => (
+                                currentDegrees.map((degree) => (
                                     <TableRow key={degree.id}>
                                         <TableCell className="font-medium">{degree.id}</TableCell>
                                         <TableCell>{degree.name}</TableCell>
@@ -367,6 +377,13 @@ export default function Index({ degrees }: CustomPageProps) {
                             }
                         </TableBody>
                     </Table>
+                    <SimplePagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={degrees.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )
                 :

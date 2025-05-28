@@ -37,6 +37,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   searchKey?: string
   searchPlaceholder?: string
+  disablePagination?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -44,6 +45,7 @@ export function DataTable<TData, TValue>({
   data,
   searchKey,
   searchPlaceholder = "Tìm kiếm...",
+  disablePagination = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -56,11 +58,18 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    ...(disablePagination ? {} : { getPaginationRowModel: getPaginationRowModel() }),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    ...(disablePagination ? {} : {
+      initialState: {
+        pagination: {
+          pageSize: 10,
+        },
+      },
+    }),
     state: {
       sorting,
       columnFilters,
@@ -159,30 +168,49 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} trên{" "}
-          {table.getFilteredRowModel().rows.length} hàng được chọn.
+      {!disablePagination && table.getPageCount() > 1 && (
+        <div className="flex items-center justify-between px-2 py-4">
+          <div className="text-sm text-muted-foreground">
+            Hiển thị {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} đến{" "}
+            {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, data.length)} trong tổng số {data.length} kết quả
+          </div>
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="px-3 py-1 rounded-md text-sm hover:bg-muted"
+            >
+              Trước
+            </Button>
+            {Array.from({ length: table.getPageCount() }, (_, i) => (
+              <Button
+                key={i}
+                variant="ghost"
+                size="sm"
+                onClick={() => table.setPageIndex(i)}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  table.getState().pagination.pageIndex === i
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-muted'
+                }`}
+              >
+                {i + 1}
+              </Button>
+            ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="px-3 py-1 rounded-md text-sm hover:bg-muted"
+            >
+              Sau
+            </Button>
+          </div>
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Trước
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Sau
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

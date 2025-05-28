@@ -21,17 +21,19 @@ class Classroom extends Model
         'course_id',
         'teacher_id',
         'students',
-        'code'
+        'code',
+        'class_coefficient'
     ];
 
     public static function rules($id = null){
         return [
             'name' => 'required|string|max:255',
             'semester_id' => 'required|integer|exists:semesters,id',
-            'course_id' => 'required|integer|exists:semesters,id',
-            'teacher_id' => 'nullable|integer|exists:semesters,id',
+            'course_id' => 'required|integer|exists:courses,id',
+            'teacher_id' => 'nullable|integer|exists:teachers,id',
             'students' => 'required|integer|min:0|max:200',
             'code' => 'nullable|string|max:10|unique:classrooms,code' . ($id ? ",$id" : ''),
+            'class_coefficient' => 'nullable|numeric|between:-0.5,0.5',
         ];
     }
     public function course(){
@@ -43,5 +45,44 @@ class Classroom extends Model
     }
     public function semester(){
         return $this->belongsTo(Semester::class, 'semester_id');
+    }
+
+    /**
+     * Calculate class coefficient based on student count
+     */
+    public function calculateClassCoefficient(): float
+    {
+        $students = $this->students;
+        
+        if ($students < 20) {
+            return -0.3;
+        } elseif ($students >= 20 && $students <= 29) {
+            return -0.2;
+        } elseif ($students >= 30 && $students <= 39) {
+            return -0.1;
+        } elseif ($students >= 40 && $students <= 49) {
+            return 0.0;
+        } elseif ($students >= 50 && $students <= 59) {
+            return 0.1;
+        } elseif ($students >= 60 && $students <= 69) {
+            return 0.2;
+        } elseif ($students >= 70 && $students <= 79) {
+            return 0.3;
+        } else {
+            // For students >= 80, use highest coefficient
+            return 0.3;
+        }
+    }
+
+    /**
+     * Auto-update class coefficient when students count changes
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::saving(function ($classroom) {
+            $classroom->class_coefficient = $classroom->calculateClassCoefficient();
+        });
     }
 }

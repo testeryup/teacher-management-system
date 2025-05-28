@@ -39,6 +39,7 @@ export type Classroom = {
     }
   }
   students: number
+  class_coefficient: number
 }
 
 interface ClassroomColumnsProps {
@@ -83,22 +84,6 @@ export const createClassroomColumns = ({ onEdit, onDelete }: ClassroomColumnsPro
     },
   },
   {
-    accessorKey: "semester",
-    header: "Học kỳ",
-    cell: ({ row }) => {
-      const semester = row.getValue("semester") as Classroom["semester"]
-      return <div>{semester?.name || ''}</div>
-    },
-  },
-  {
-    id: "academicYear",
-    header: "Năm học",
-    cell: ({ row }) => {
-      const semester = row.getValue("semester") as Classroom["semester"]
-      return <div>{semester?.academic_year?.name || ''}</div>
-    },
-  },
-  {
     accessorKey: "teacher",
     header: "Giáo viên",
     cell: ({ row }) => {
@@ -122,6 +107,26 @@ export const createClassroomColumns = ({ onEdit, onDelete }: ClassroomColumnsPro
     cell: ({ row }) => {
       const count = row.getValue("students") as number
       return <div className="text-center font-medium">{count}</div>
+    },
+  },
+  {
+    accessorKey: "class_coefficient",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Hệ số lớp
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const coefficient = row.getValue("class_coefficient") as number
+      const formattedCoefficient = coefficient >= 0 ? `+${coefficient.toFixed(1)}` : coefficient.toFixed(1)
+      const colorClass = coefficient > 0 ? "text-green-600" : coefficient < 0 ? "text-red-600" : "text-gray-600"
+      return <div className={`text-center font-medium ${colorClass}`}>{formattedCoefficient}</div>
     },
   },
   {

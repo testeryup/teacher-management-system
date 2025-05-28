@@ -41,6 +41,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { SimplePagination } from "@/components/ui/simple-pagination"
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -93,6 +94,15 @@ interface CustomPageProps {
 export default function Index({ teachers, degrees, departments }: CustomPageProps) {
     const page = usePage<PageProps>();
     const flash = page.props?.flash as CustomPageProps['flash'];
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(teachers.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentTeachers = teachers.slice(startIndex, endIndex);
+    
     const { data, setData, post, processing, errors, reset, delete: destroy, put } = useForm<
         {
             fullName: string;
@@ -381,7 +391,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                         </TableHeader>
                         <TableBody>
                             {
-                                teachers.map((teacher) => {
+                                currentTeachers.map((teacher) => {
                                     return (
                                         <TableRow key={teacher.id}>
                                             <TableCell className="font-medium">{teacher.id}</TableCell>
@@ -413,6 +423,13 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                             }
                         </TableBody>
                     </Table>
+                    <SimplePagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={teachers.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )
                 :
