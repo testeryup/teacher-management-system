@@ -24,14 +24,13 @@ class TeacherController extends Controller
     
     public function update(Request $request, Teacher $teacher){
         $request->validate([
-            'fullName' => 'required|string|max:255',
-            'DOB' => 'required|date',
-            'phone' => 'required|string|max:10',
-            'email' => 'required|string|max:255|email',
-            'degree_id' => 'required|exists:degrees,id',
-            'department_id' => 'required|exists:departments,id'
-        ]);
-        
+        'fullName' => 'required|string|max:255',
+        'DOB' => 'required|date',
+        'phone' => 'required|string|max:10|unique:teachers,phone,' . $teacher->id,
+        'email' => 'required|string|email|max:255|unique:teachers,email,' . $teacher->id,
+        'degree_id' => 'required|exists:degrees,id',
+        'department_id' => 'required|exists:departments,id'
+    ]);
         $teacher->update($request->all());
         
         return redirect()->route('teachers.index')->with('message', 'Thông tin giáo viên đã cập nhật thành công');
@@ -43,10 +42,10 @@ class TeacherController extends Controller
         $request->validate([
             'fullName' => 'required|string|max:255',
             'DOB' => 'required|date',
-            'phone' => 'required|string|max:10',
-            'email' => 'required|string|max:255|email',
+            'phone' => 'required|string|max:10|unique:teachers,phone',
+            'email' => 'required|string|email|max:255|unique:teachers,email',
             'degree_id' => 'required|exists:degrees,id',
-            'department_id' =>'required|exists:departments,id'
+            'department_id' => 'required|exists:departments,id'
         ]);
         Teacher::create([
             'fullName' => $request->fullName,

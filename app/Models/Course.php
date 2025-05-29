@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory; 
 use App\Models\Classroom;
 use App\AutoGenerateCode;
 
 class Course extends Model
 {
+    use HasFactory; 
     use AutoGenerateCode;
 
     protected $codePrefix = 'CS';
