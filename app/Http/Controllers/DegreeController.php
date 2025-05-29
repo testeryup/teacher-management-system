@@ -17,9 +17,10 @@ class DegreeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'baseSalaryFactor' => 'required|numeric|min:0',
+            'name' => 'required|string|max:255|unique:degrees,name',
+            'baseSalaryFactor' => 'required|numeric|min:0|unique:degrees,baseSalaryFactor',
         ]);
+
         
         Degree::create($validated);
         
@@ -42,9 +43,10 @@ class DegreeController extends Controller
 
     public function update(Request $request, Degree $degree){
         $request->validate([
-            'name' => 'required|string|max:255',
-            'baseSalaryFactor' => 'required|numeric|min:0',
-        ]);
+        'name' => 'required|string|max:255|unique:degrees,name,' . $degree->id,
+        'baseSalaryFactor' => 'required|numeric|min:0|unique:degrees,baseSalaryFactor,' . $degree->id,
+    ]);
+
 
         $degree->update([
             'name' => $request->input('name'),

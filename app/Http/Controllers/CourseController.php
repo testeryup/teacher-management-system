@@ -20,7 +20,7 @@ class CourseController extends Controller
             \Log::info('Course store request:', $request->all());
             
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:courses,name',
                 'credits' => 'required|integer|min:1',
                 'lessons' => 'required|integer|min:1',
             ]);
@@ -60,7 +60,7 @@ class CourseController extends Controller
     public function update(Request $request, Course $course){
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:courses,name,' . $course->id,
                 'credits' => 'required|integer|min:1',
                 'lessons' => 'required|integer|min:1',
                 'code' => 'nullable|string'
