@@ -519,7 +519,8 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                             Xác nhận
                         </AlertDialogAction>
                     </AlertDialogFooter>
-                </AlertDialogContent>            </AlertDialog>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }

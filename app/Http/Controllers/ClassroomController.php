@@ -10,6 +10,7 @@ use App\Models\AcademicYear;
 use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class ClassroomController extends Controller
 {
@@ -18,17 +19,36 @@ class ClassroomController extends Controller
      */
     public function index()
     {
-        $classrooms = Classroom::with(['course', 'semester.academicYear', 'teacher'])->get();
+        $user = Auth::user();
+        
+        // Get all academic data
         $courses = Course::all();
         $academicYears = AcademicYear::all();
         $semesters = Semester::with('academicYear')->get();
-        $teachers = Teacher::with(['department', 'degree'])->get();
-        // \Log::info("Classrooms data:", $classrooms->toArray());
-        // \Log::info("Courses data:", $courses->toArray());
-        // \Log::info("Academic Years data:", $academicYears->toArray());
-        // \Log::info("Semesters data:", $semesters->toArray());
-        // \Log::info("Teachers data:", $teachers->toArray());
-        // \Log()
+        
+        // Filter teachers and classrooms based on user role
+        if ($user->isAdmin()) {
+            // Admins see all teachers and classrooms
+            $teachers = Teacher::with(['department', 'degree'])->get();
+            $classrooms = Classroom::with(['course', 'semester.academicYear', 'teacher'])->get();
+        } elseif ($user->isDepartmentHead() && $user->department_id) {
+            // Department heads only see teachers from their department
+            $teachers = Teacher::with(['department', 'degree'])
+                ->where('department_id', $user->department_id)
+                ->get();
+                
+            // Only show classrooms where the teacher is from their department
+            $classrooms = Classroom::with(['course', 'semester.academicYear', 'teacher'])
+                ->whereHas('teacher', function($q) use ($user) {
+                    $q->where('department_id', $user->department_id);
+                })
+                ->orWhere('teacher_id', null) // Also include unassigned classrooms
+                ->get();
+        } else {
+            // Other users (teachers) can't access this page
+            // This should be handled by middleware, but just in case
+            return redirect()->route('dashboard')->with('error', 'Unauthorized access');
+        }
         return Inertia::render('Classrooms', [
             'classrooms' => $classrooms,
             'courses' => $courses,
@@ -44,7 +64,15 @@ class ClassroomController extends Controller
      */
     public function filter(Request $request)
     {
+        $user = Auth::user();
         $query = Classroom::with(['course', 'semester.academicYear', 'teacher']);
+
+        // Department head can only see classrooms with teachers from their department
+        if ($user->isDepartmentHead() && $user->department_id) {
+            $query->whereHas('teacher', function($q) use ($user) {
+                $q->where('department_id', $user->department_id);
+            })->orWhere('teacher_id', null); // Also include unassigned classrooms
+        }
 
         // Filter by academic year if provided
         if ($request->filled('academicYear_id')) {
@@ -73,7 +101,17 @@ class ClassroomController extends Controller
         $courses = Course::all();
         $academicYears = AcademicYear::all();
         $semesters = Semester::with('academicYear')->get();
-        $teachers = Teacher::with(['department', 'degree'])->get();
+        
+        // Filter teachers based on user role
+        if ($user->isAdmin()) {
+            $teachers = Teacher::with(['department', 'degree'])->get();
+        } elseif ($user->isDepartmentHead() && $user->department_id) {
+            $teachers = Teacher::with(['department', 'degree'])
+                ->where('department_id', $user->department_id)
+                ->get();
+        } else {
+            $teachers = collect(); // Empty collection
+        }
 
         return Inertia::render('Classrooms', [
             'classrooms' => $classrooms,
@@ -91,6 +129,8 @@ class ClassroomController extends Controller
     public function store(Request $request)
     {
         try {
+            $user = Auth::user();
+            
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'semester_id' => 'required|integer|exists:semesters,id',
@@ -99,6 +139,17 @@ class ClassroomController extends Controller
                 'students' => 'required|integer|min:0|max:200',
                 'class_count' => 'nullable|integer|min:1|max:50',
             ]);
+            
+            // For department heads, validate that the selected teacher is from their department
+            if ($user->isDepartmentHead() && $user->department_id && !empty($validated['teacher_id'])) {
+                $teacher = Teacher::find($validated['teacher_id']);
+                
+                if (!$teacher || $teacher->department_id != $user->department_id) {
+                    return redirect()->back()
+                        ->with('error', 'You can only assign teachers from your department')
+                        ->withInput();
+                }
+            }
             
             $classCount = $validated['class_count'] ?? 1;
             $baseName = $validated['name'];
@@ -145,12 +196,32 @@ class ClassroomController extends Controller
     public function update(Request $request, Classroom $classroom)
     {
         try {
+            $user = Auth::user();
+            
             // Chỉ cho phép sửa name, teacher_id và students theo yêu cầu
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'teacher_id' => 'required|exists:teachers,id',
                 'students' => 'required|integer|min:0',
             ]);
+            
+            // For department heads, validate that the selected teacher is from their department
+            if ($user->isDepartmentHead() && $user->department_id) {
+                $teacher = Teacher::find($validated['teacher_id']);
+                
+                if (!$teacher || $teacher->department_id != $user->department_id) {
+                    return redirect()->back()
+                        ->with('error', 'You can only assign teachers from your department')
+                        ->withInput();
+                }
+                
+                // Also check that the classroom is one they're allowed to modify
+                // (either has no teacher or has a teacher from their department)
+                if ($classroom->teacher && $classroom->teacher->department_id != $user->department_id) {
+                    return redirect()->route('classrooms.index')
+                        ->with('error', 'You can only modify classrooms assigned to teachers in your department');
+                }
+            }
             
             $classroom->update($validated);
             
@@ -171,6 +242,16 @@ class ClassroomController extends Controller
     public function destroy(Classroom $classroom)
     {
         try {
+            $user = Auth::user();
+            
+            // For department heads, check that they can delete this classroom
+            if ($user->isDepartmentHead() && $user->department_id) {
+                if ($classroom->teacher && $classroom->teacher->department_id != $user->department_id) {
+                    return redirect()->route('classrooms.index')
+                        ->with('error', 'You can only delete classrooms assigned to teachers in your department');
+                }
+            }
+            
             // Check for any dependent relationships
             // if ($classroom->students()->count() > 0) {
             //     throw new Exception('Không thể xóa lớp học này vì đã có sinh viên đăng ký');

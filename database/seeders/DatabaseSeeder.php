@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
 
         // Seed academic data
         $this->call([
+            RolesAndPermissionsSeeder::class,
             AcademicYearSeeder::class,
             SemesterSeeder::class,
             CourseSeeder::class,

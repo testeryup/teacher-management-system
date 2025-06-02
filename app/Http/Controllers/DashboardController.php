@@ -51,6 +51,21 @@ class DashboardController extends Controller
                 'average_age' => round($ages->avg(), 1),
             ];
         });
+        
+        // Get the authenticated user and check if they're a department head
+        $user = auth()->user();
+        $departmentHeadInfo = null;
+        
+        if ($user && $user->isDepartmentHead() && $user->department_id) {
+            $department = Department::find($user->department_id);
+            if ($department) {
+                $departmentHeadInfo = [
+                    'is_department_head' => true,
+                    'department_name' => $department->name,
+                    'department_id' => $department->id,
+                ];
+            }
+        }
 
         return response()->json([
             'degrees' => $degrees,
@@ -60,7 +75,8 @@ class DashboardController extends Controller
             'semesters' => $semesters,
             'classroom_stats' => $classroomStats,
             'teachers_age_by_department' => $teacherAgeByDepartment,
-            'total_teachers' => $teachers->count()
+            'total_teachers' => $teachers->count(),
+            'department_head_info' => $departmentHeadInfo
         ], 200);
     }
 

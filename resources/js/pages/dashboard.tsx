@@ -1,9 +1,12 @@
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { PieChartComponent } from "@/components/charts/PieChartComponent"
 import BarChartComponent from "@/components/charts/BarChartComponent";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { DepartmentHeadPanel } from '@/components/department-head-panel';
 
 import { useEffect, useState } from 'react';
 
@@ -63,6 +66,12 @@ interface ClassroomStat {
     total_students: number;
 }
 
+interface DepartmentHeadInfo {
+    is_department_head: boolean;
+    department_name: string;
+    department_id: number;
+}
+
 interface DashboardData {
     departments: Department[];
     degrees: Degree[];
@@ -71,6 +80,7 @@ interface DashboardData {
     semesters: Semester[];
     classroom_stats: ClassroomStat[];
     total_teachers: number;
+    department_head_info?: DepartmentHeadInfo;
 }
 
 export default function Dashboard() {
@@ -165,6 +175,11 @@ export default function Dashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                {/* Department Head Panel - Only shown if user is a department head */}
+                {data?.department_head_info && (
+                    <DepartmentHeadPanel departmentName={data.department_head_info.department_name} />
+                )}
+                
                 {/* Thống kê tổng quan */}
                 <div className="grid auto-rows-min gap-4 md:grid-cols-1">
                     <div className="border-sidebar-border/70 dark:border-sidebar-border relative overflow-hidden rounded-xl border flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6">
@@ -358,8 +373,8 @@ export default function Dashboard() {
                             >
                                 <option value="">Tất cả học kỳ</option>
                                 {data?.semesters?.map((semester) => (
-                                    <option key={semester.id} value={semester.id.toString()}>
-                                        {semester.name} - {semester.academicYear?.name}
+                                    <option key={semester.id} value={semester.name}>
+                                        {semester.name} 
                                     </option>
                                 ))}
                             </select>
