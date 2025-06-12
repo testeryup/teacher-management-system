@@ -94,8 +94,8 @@ class ClassroomController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'semester_id' => 'required|integer|exists:semesters,id',
-                'course_id' => 'required|integer|exists:semesters,id',
-                'teacher_id' => 'nullable|integer|exists:semesters,id',
+                'course_id' => 'required|integer|exists:courses,id',
+                'teacher_id' => 'nullable|integer|exists:teachers,id',
                 'students' => 'required|integer|min:0|max:200',
             ]);
             
@@ -127,7 +127,7 @@ class ClassroomController extends Controller
             // Chỉ cho phép sửa name, teacher_id và students theo yêu cầu
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'teacher_id' => 'required|exists:teachers,id',
+                'teacher_id' => 'required|integer|exists:teachers,id',
                 'students' => 'required|integer|min:0',
             ]);
             

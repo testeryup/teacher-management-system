@@ -28,8 +28,8 @@ class Classroom extends Model
         return [
             'name' => 'required|string|max:255',
             'semester_id' => 'required|integer|exists:semesters,id',
-            'course_id' => 'required|integer|exists:semesters,id',
-            'teacher_id' => 'nullable|integer|exists:semesters,id',
+            'course_id' => 'required|integer|exists:courses,id',
+            'teacher_id' => 'nullable|integer|exists:teachers,id',
             'students' => 'required|integer|min:0|max:200',
             'code' => 'nullable|string|max:10|unique:classrooms,code' . ($id ? ",$id" : ''),
         ];
