@@ -43,11 +43,10 @@ interface BarChartProps {
 }
 export default function BarChartComponent({data = defaultData}: BarChartProps) {
     return (
-        <Card className="w-full h-full">
-            <CardHeader >
-                <CardTitle>Số lượng giảng viên theo khoa</CardTitle>
-                {/* <CardDescription>January - June 2024</CardDescription> */}
-            </CardHeader>
+        <Card className="w-full h-full p-0 border-none shadow-none">
+            {/* <CardHeader >
+                <CardTitle>Phân bố giáo viên theo khoa</CardTitle>
+            </CardHeader> */}
             <CardContent >
                 <ChartContainer config={chartConfig} className="h-[480px] md:h-[500px] w-full">
                     <BarChart
