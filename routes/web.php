@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DegreeController;
 use App\Http\Controllers\TeacherController;
@@ -18,15 +17,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-    Route::get('/products/create', [ProductController::class, "create"])->name('products.create');
-    Route::get('/products/{product}/edit', [ProductController::class, "edit"])->name('products.edit');
-    Route::put('/products/{product}', [ProductController::class, "update"])->name('products.update');
-    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     //department
     Route::get('/departments', [DepartmentController::class, "index"])->name('departments.index');
@@ -46,8 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/teachers/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');
 
     //for dashboard
-    Route::get('/api/reports', [DashboardController::class, 'index'])
-        ->name('dashboard.reports');
+    // Route::get('/api/reports', [DashboardController::class, 'index'])
+    //     ->name('dashboard.reports');
 
 
     // CN02 - QL Lop hoc & mon hoc

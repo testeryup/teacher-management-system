@@ -18,28 +18,28 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart"
 const defaultData = [
-    { department: "CNTT", employees: 12 },
-    { department: "Kinh tế", employees: 18 },
-    { department: "Ngôn ngữ", employees: 9 },
-    { department: "Dược", employees: 15 },
-    { department: "Cơ khí", employees: 7 },
-    { department: "Hóa học", employees: 11 },
+    { abbrName: "CNTT", teachers_count: 12 },
+    { abbrName: "Kinh tế", teachers_count: 18 },
+    { abbrName: "Ngôn ngữ", teachers_count: 9 },
+    { abbrName: "Dược", teachers_count: 15 },
+    { abbrName: "Cơ khí", teachers_count: 7 },
+    { abbrName: "Hóa học", teachers_count: 11 },
 ]
 
 const chartConfig = {
-    employees: {
+    teachers_count: {
         label: "Giáo viên",
         color: "var(--chart-1)",
     },
 } satisfies ChartConfig
 
-interface DepartmentData {
-    department: string;
-    employees: number;
+interface Department {
+    abbrName: string;
+    teachers_count: number;
 }
 
 interface BarChartProps {
-    data?: DepartmentData[];
+    data?: Department[];
 }
 export default function BarChartComponent({data = defaultData}: BarChartProps) {
     return (
@@ -62,7 +62,7 @@ export default function BarChartComponent({data = defaultData}: BarChartProps) {
                     >
                         <CartesianGrid vertical={false} />
                         <XAxis
-                            dataKey="department"
+                            dataKey="abbrName"
                             tickLine={false}
                             tickMargin={10}
                             axisLine={false}
@@ -72,7 +72,7 @@ export default function BarChartComponent({data = defaultData}: BarChartProps) {
                             cursor={false}
                             content={<ChartTooltipContent hideLabel />}
                         />
-                        <Bar dataKey="employees" fill="var(--chart-1)" radius={8}>
+                        <Bar dataKey="teachers_count" fill="var(--chart-1)" radius={8}>
                             <LabelList
                                 position="top"
                                 offset={12}

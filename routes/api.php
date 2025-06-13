@@ -7,11 +7,11 @@ use App\Http\Controllers\DashboardController;
     
 // });
 
-// Route::get('rreports', [DashboardController::class, 'index'])
-//         ->name('api.reports.index');
-// Route::middleware(['auth', 'verified'])->group(function () {
+Route::get('reports', [DashboardController::class, 'apiIndex'])
+        ->name('api.apiIndex');
+Route::middleware(['auth', 'verified'])->group(function () {
 
-// });
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

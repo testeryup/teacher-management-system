@@ -12,28 +12,59 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/dashboard',
     },
 ];
-const departmentData = [
-    { department: "CNTT", employees: 12 },
-    { department: "Kinh tế", employees: 18 },
-    { department: "Ngôn ngữ", employees: 9 },
-    { department: "Dược", employees: 15 },
-    { department: "Cơ khí", employees: 7 },
-    { department: "Hóa học", employees: 11 },
-];
 
-export default function Dashboard() {
-    // const data = [];
-    useEffect(() => {
-        async function fetchData() {
-            const response = await fetch(route('dashboard.reports'));
-            const data = await response.json();
-            console.log(data);
+
+interface Department{
+    // id: number,
+    // name: string,
+    abbrName: string,
+    teachers_count: number
+}
+
+interface TeacherDegree{
+    id: number,
+    name: string,
+    teachers_count: number
+}
+
+interface ViewTeacherDegreesProps{
+    teacherDegrees: TeacherDegree[]
+}
+interface InputProps{
+    departments: Department[],
+    teacherDegrees: TeacherDegree[]
+}
+
+function ViewTeacherDegrees({teacherDegrees}: ViewTeacherDegreesProps){
+    return (
+    <>
+        {
+            teacherDegrees.map(degree => {
+                return (
+                    <div className='mb-2' key={degree.id}>
+                        <span className='text-blue-600 font-medium'>{`${degree.name ?? ''} `}</span>
+                        <span className="text-gray-600"> {degree.teachers_count ?? 0} Giáo viên</span>
+                    </div>
+                )
+            })
         }
-        fetchData();
-        // return () => {
-        //     console.log("Cleanup before component unmounts or updates!");
-        // };
-    }, []);
+    </>
+    )
+}
+export default function Dashboard({departments, teacherDegrees} : InputProps) {
+    // const data = [];
+    // useEffect(() => {
+    //     async function fetchData() {
+    //         const response = await fetch(route('dashboard.reports'));
+    //         const data = await response.json();
+    //         console.log(data);
+    //     }
+    //     fetchData();
+    //     // return () => {
+    //     //     console.log("Cleanup before component unmounts or updates!");
+    //     // };
+    // }, []);
+    console.log("check departments:", departments);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -44,6 +75,7 @@ export default function Dashboard() {
                     </div>
                     <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
                         {/* <BarChartComponent></BarChartComponent> */}
+                        <ViewTeacherDegrees teacherDegrees={teacherDegrees}></ViewTeacherDegrees>
 
                     </div>
                     <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
@@ -51,7 +83,7 @@ export default function Dashboard() {
                     </div>
                 </div>
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative  overflow-hidden rounded-xl border ">
-                    <BarChartComponent data={departmentData}></BarChartComponent>
+                    <BarChartComponent data={departments}></BarChartComponent>
                 </div>
             </div>
         </AppLayout>
