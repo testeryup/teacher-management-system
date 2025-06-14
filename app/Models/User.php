@@ -22,6 +22,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'department_id',
+        'is_active'
     ];
 
     /**
@@ -44,6 +47,35 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean'
         ];
+    }
+
+    public function department(): BelongsTo{
+        return $this->belongsTo(Department::class);
+    }
+
+    public function isAdmin(): bool{
+        return $this->role === 'admin';
+    }
+
+    public function isDepartmentHead(): bool
+    {
+        return $this->role === 'department_head';
+    }
+
+    public function canManageDepartment(int $departmentId): bool
+    {
+        return $this->isAdmin() || ($this->isDepartmentHead() && $this->department_id === $departmentId);
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles);
     }
 }

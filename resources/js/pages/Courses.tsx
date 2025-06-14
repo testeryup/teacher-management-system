@@ -305,8 +305,8 @@ export default function Courses({ courses }: CustomPageProps) {
                                         <Label htmlFor="lessons">Số tiết học</Label>
                                         <Input
                                             id="lessons"
-                                            type="number"
-                                            min="1"
+                                            // type="number"
+                                            // min="1"
                                             value={data.lessons}
                                             onChange={(e) => setData('lessons', parseInt(e.target.value) || 1)}
                                         />
