@@ -36,9 +36,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy'])->name('teachers.destroy');
     Route::put('/teachers/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');
 
-    //for dashboard
-    // Route::get('/api/reports', [DashboardController::class, 'index'])
-    //     ->name('dashboard.reports');
 
 
     // CN02 - QL Lop hoc & mon hoc
