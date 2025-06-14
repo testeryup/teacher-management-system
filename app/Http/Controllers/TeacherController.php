@@ -13,12 +13,12 @@ class TeacherController extends Controller
     public function index(){
         $user = auth()->user();
         if($user->isAdmin()){
-            $teachers = Teacher::with(['degree', 'department'])->get();
+            $teachers = Teacher::with(['degree', 'department'])->paginate(10);
         }
         else{
             $teachers = Teacher::with(['degree', 'department'])
                 ->where('department_id', $user->department_id)
-                ->get();
+                ->paginate(10);
         }
         if($user->isAdmin()){
             $degrees = Degree::all();

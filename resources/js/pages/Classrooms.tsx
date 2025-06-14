@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Pagination } from '@/components/ui/pagination';
 import {
     Sheet,
     SheetClose,
@@ -56,7 +57,19 @@ interface Semester {
 }
 
 interface ClassroomsPageProps {
-    classrooms: Classroom[] | { data: Classroom[] };
+    classrooms: Classroom[] | {
+        data: Classroom[];
+        current_page?: number;
+        last_page?: number;
+        total?: number;
+        from?: number;
+        to?: number;
+        links?: {
+            url: string | null;
+            label: string;
+            active: boolean;
+        }[];
+    };
     teachers: Teacher[];
     courses: Course[];
     semesters: Semester[];
@@ -315,6 +328,17 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                     searchKey="name"
                     searchPlaceholder="Tìm kiếm theo tên lớp học..."
                 />
+                {/* Pagination */}
+                {!Array.isArray(classrooms) && classrooms.links && (
+                    <div className="mt-4">
+                        <Pagination
+                            links={classrooms.links}
+                            from={classrooms.from || 0}
+                            to={classrooms.to || 0}
+                            total={classrooms.total || 0}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Dialog xác nhận xóa */}

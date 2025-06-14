@@ -10,6 +10,9 @@ import { Toaster } from "@/components/ui/sonner"
 import { toast } from 'sonner';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Pagination } from '@/components/ui/pagination';
+
+
 import {
     Sheet,
     SheetClose,
@@ -73,6 +76,13 @@ interface CustomPageProps {
         current_page: number;
         last_page: number;
         total: number;
+        from?: number;
+        to?: number;
+        links?: {
+            url: string | null;
+            label: string;
+            active: boolean;
+        }[];
     };
     flash?: {
         message?: string;
@@ -388,6 +398,14 @@ export default function Index({ academicYears }: CustomPageProps) {
                             ))}
                         </TableBody>
                     </Table>
+                    <div className="mt-4">
+                        <Pagination
+                            links={academicYears.links || []}
+                            from={academicYears.from || 0}
+                            to={academicYears.to || 0}
+                            total={academicYears.total || 0}
+                        />
+                    </div>
                 </div>
             ) : (
                 <div className="m-4">

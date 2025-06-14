@@ -9,7 +9,10 @@ import { PageProps } from '@inertiajs/core';
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from 'sonner';
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@/components/ui/label";
+import { Pagination } from '@/components/ui/pagination';
+
+
 import {
     Sheet,
     SheetClose,
@@ -57,7 +60,19 @@ interface Department {
     updatedAt: Date
 }
 interface CustomPageProps {
-    departments: Department[];
+    departments: {
+        data: Department[];
+        links: {
+            url: string | null;
+            label: string;
+            active: boolean;
+        }[];
+        current_page: number;
+        last_page: number;
+        from: number;
+        to: number;
+        total: number;
+    };
     flash?: {
         message?: string;
         error?: string;
@@ -131,13 +146,13 @@ export default function Index({ departments }: CustomPageProps) {
                                     <Label htmlFor="abbrName">
                                         Tên viết tắt
                                     </Label>
-                                    <Input id="abbrName" value={data.abbrName} onChange={(e) => setData('abbrName', e.target.value)}/>
+                                    <Input id="abbrName" value={data.abbrName} onChange={(e) => setData('abbrName', e.target.value)} />
                                 </div>
                                 <div className="grid grid-rows-2 items-center">
                                     <Label htmlFor="description">
                                         Mô tả
                                     </Label>
-                                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)}/>
+                                    <Textarea id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} />
                                 </div>
                             </div>
 
@@ -171,7 +186,7 @@ export default function Index({ departments }: CustomPageProps) {
                 </div>
 
             </div> */}
-            {departments.length > 0 ? (
+            {departments.data.length > 0 ? (
                 <div className="m-4">
 
                     <Table>
@@ -187,7 +202,7 @@ export default function Index({ departments }: CustomPageProps) {
                         </TableHeader>
                         <TableBody>
                             {
-                                departments.map((department) => (
+                                departments.data.map((department: Department) => (
                                     <TableRow key={department.id}>
                                         <TableCell className="font-medium">{department.id}</TableCell>
                                         <TableCell>{department.name}</TableCell>
@@ -223,6 +238,14 @@ export default function Index({ departments }: CustomPageProps) {
                     </div>
                 )
             }
+            <div className="mx-4">
+                <Pagination
+                    links={departments.links}
+                    from={departments.from}
+                    to={departments.to}
+                    total={departments.total}
+                />
+            </div>
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
