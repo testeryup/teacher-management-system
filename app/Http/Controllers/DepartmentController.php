@@ -9,7 +9,7 @@ use Inertia\Inertia;
 class DepartmentController extends Controller
 {
     public function index(){
-        $departments = Department::all();
+        $departments = Department::paginate(10);
         return Inertia::render('Departments/Index', ['departments' => $departments]);
     }
 
