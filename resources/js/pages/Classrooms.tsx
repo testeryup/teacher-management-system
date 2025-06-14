@@ -28,7 +28,6 @@ import { toast, Toaster } from 'sonner';
 import { BreadcrumbItem } from '@/types';
 import { DataTable } from '@/components/ui/data-table';
 import { createClassroomColumns, type Classroom } from '@/components/columns/classroom-columns';
-import { Pagination } from '@/components/ui/pagination';
 interface Teacher {
     id: number;
     fullName: string;
@@ -57,19 +56,7 @@ interface Semester {
 }
 
 interface ClassroomsPageProps {
-    classrooms: Classroom[] | {
-        data: Classroom[];
-        current_page?: number;
-        last_page?: number;
-        total?: number;
-        from?: number;
-        to?: number;
-        links?: {
-            url: string | null;
-            label: string;
-            active: boolean;
-        }[];
-    };
+    classrooms: Classroom[] | { data: Classroom[] };
     teachers: Teacher[];
     courses: Course[];
     semesters: Semester[];
@@ -328,18 +315,6 @@ export default function Classrooms({ classrooms, teachers, courses, semesters, a
                     searchKey="name"
                     searchPlaceholder="Tìm kiếm theo tên lớp học..."
                 />
-                
-                {/* Pagination */}
-                {!Array.isArray(classrooms) && classrooms.links && (
-                    <div className="mt-4">
-                        <Pagination
-                            links={classrooms.links}
-                            from={classrooms.from || 0}
-                            to={classrooms.to || 0}
-                            total={classrooms.total || 0}
-                        />
-                    </div>
-                )}
             </div>
 
             {/* Dialog xác nhận xóa */}

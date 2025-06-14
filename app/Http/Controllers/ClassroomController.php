@@ -23,12 +23,6 @@ class ClassroomController extends Controller
         $academicYears = AcademicYear::all();
         $semesters = Semester::with('academicYear')->get();
         $teachers = Teacher::with(['department', 'degree'])->get();
-        // \Log::info("Classrooms data:", $classrooms->toArray());
-        // \Log::info("Courses data:", $courses->toArray());
-        // \Log::info("Academic Years data:", $academicYears->toArray());
-        // \Log::info("Semesters data:", $semesters->toArray());
-        // \Log::info("Teachers data:", $teachers->toArray());
-        // \Log()
         return Inertia::render('Classrooms', [
             'classrooms' => $classrooms,
             'courses' => $courses,
@@ -90,6 +84,7 @@ class ClassroomController extends Controller
      */
     public function store(Request $request)
     {
+        
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',

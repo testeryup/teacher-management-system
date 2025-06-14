@@ -41,7 +41,6 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Textarea } from '@/components/ui/textarea';
-import { Pagination } from '@/components/ui/pagination';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -58,19 +57,7 @@ interface Department {
     updatedAt: Date
 }
 interface CustomPageProps {
-    departments: {
-        data: Department[];
-        links: {
-            url: string | null;
-            label: string;
-            active: boolean;
-        }[];
-        current_page: number;
-        last_page: number;
-        from: number;
-        to: number;
-        total: number;
-    };
+    departments: Department[];
     flash?: {
         message?: string;
         error?: string;
@@ -184,7 +171,7 @@ export default function Index({ departments }: CustomPageProps) {
                 </div>
 
             </div> */}
-            {departments.data.length > 0 ? (
+            {departments.length > 0 ? (
                 <div className="m-4">
 
                     <Table>
@@ -200,7 +187,7 @@ export default function Index({ departments }: CustomPageProps) {
                         </TableHeader>
                         <TableBody>
                             {
-                                departments.data.map((department: Department) => (
+                                departments.map((department) => (
                                     <TableRow key={department.id}>
                                         <TableCell className="font-medium">{department.id}</TableCell>
                                         <TableCell>{department.name}</TableCell>
@@ -236,14 +223,6 @@ export default function Index({ departments }: CustomPageProps) {
                     </div>
                 )
             }
-            <div className="mx-4">
-                <Pagination 
-                    links={departments.links}
-                    from={departments.from}
-                    to={departments.to}
-                    total={departments.total}
-                />
-            </div>
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

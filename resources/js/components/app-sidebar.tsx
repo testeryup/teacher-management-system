@@ -3,7 +3,7 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, GitFork, Hospital,UsersRound, 
     GraduationCap, Notebook, LandPlot, CalendarCog  } from 'lucide-react';
 import AppLogo from './app-logo';
@@ -66,6 +66,77 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const {props} = usePage();
+    const user = (props as any).auth?.user;
+    const isAdmin = user?.role === 'admin';
+    const isDepartmentHead = user?.role === 'department_head';
+
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Tổng quan',
+            href: '/dashboard',
+            icon: LayoutGrid,
+        }
+    ];
+     // Admin-only items
+    if (isAdmin) {
+        mainNavItems.push(
+            {
+                title: 'Khoa',
+                href: '/departments',
+                icon: Hospital,
+            },
+            {
+                title: 'Năm học',
+                href: '/academicyears',
+                icon: LandPlot,
+            },
+            // {
+            //     title: 'Học kỳ',
+            //     href: '/semesters',
+            //     icon: CalendarCog,
+            // }
+        );
+    }
+
+    // Items for both admin and department head
+    if (isAdmin || isDepartmentHead) {
+        mainNavItems.push(
+            {
+                title: 'Bằng cấp',
+                href: '/degrees',
+                icon: GraduationCap,
+            },
+            {
+                title: 'Giáo viên',
+                href: '/teachers',
+                icon: UsersRound,
+            },
+            {
+                title: 'Khoá học',
+                href: '/courses',
+                icon: Notebook,
+            },
+            {
+                title: 'Lớp học',
+                href: '/classrooms',
+                icon: GitFork,
+            }
+        );
+    }
+
+    const footerNavItems: NavItem[] = [
+        {
+            title: 'Repository',
+            href: 'https://github.com/laravel/react-starter-kit',
+            icon: Folder,
+        },
+        {
+            title: 'Documentation',
+            href: 'https://laravel.com/docs/starter-kits#react',
+            icon: BookOpen,
+        },
+    ];
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
