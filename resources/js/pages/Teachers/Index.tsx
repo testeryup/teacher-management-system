@@ -40,6 +40,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Pagination } from '@/components/ui/pagination';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -77,7 +78,19 @@ interface Teacher {
     updatedAt: Date,
 }
 interface CustomPageProps {
-    teachers: Teacher[];
+    teachers: {
+        data: Teacher[];
+        links: {
+            url: string | null;
+            label: string;
+            active: boolean;
+        }[];
+        current_page: number;
+        last_page: number;
+        from: number;
+        to: number;
+        total: number;
+    };
     degrees: Degree[];
     departments: Department[];
     flash?: {
@@ -330,7 +343,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                 </div>
 
             </div> */}
-            {teachers.length > 0 ? (
+            {teachers.data.length > 0 ? (
                 <div className="m-4">
                     <Table>
                         {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
@@ -348,7 +361,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                         </TableHeader>
                         <TableBody>
                             {
-                                teachers.map((teacher) => (
+                                teachers.data.map((teacher) => (
                                     <TableRow key={teacher.id}>
                                         <TableCell className="font-medium">{teacher.id}</TableCell>
                                         <TableCell>{teacher.fullName}</TableCell>
@@ -400,6 +413,14 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                     </div>
                 )
             }
+            <div className="mx-4">
+                <Pagination 
+                    links={teachers.links}
+                    from={teachers.from}
+                    to={teachers.to}
+                    total={teachers.total}
+                />
+            </div>
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
