@@ -11,7 +11,7 @@ use Inertia\Inertia;
 class TeacherController extends Controller
 {
     public function index(){
-        $teachers = Teacher::with(['degree', 'department'])->paginate(10);
+        $teachers = Teacher::with(['degree', 'department'])->get();
         $degrees = Degree::all();
         $departments = Department::all();
         return Inertia::render('Teachers/Index', [

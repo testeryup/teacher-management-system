@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageProps } from '@inertiajs/core';
 import { toast, Toaster } from 'sonner';
-import { Pagination } from '@/components/ui/pagination';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -195,6 +194,39 @@ function CourseActions({ course }: { course: Course }) {
     );
 }
 
+// Pagination component
+function Pagination({ courses }: { courses: PaginatedCourses }) {
+    if (courses.last_page <= 1) return null;
+
+    return (
+        <div className="flex items-center justify-between px-2">
+            <div className="text-sm text-muted-foreground">
+                Hiển thị {courses.from} đến {courses.to} trong tổng số {courses.total} kết quả
+            </div>
+            <div className="flex items-center space-x-1">
+                {courses.links.map((link, index) => {
+                    if (!link.url && link.label.includes('...')) {
+                        return <span key={index} className="px-2">...</span>;
+                    }
+                    
+                    return (
+                        <Link
+                            key={index}
+                            href={link.url || '#'}
+                            className={`px-3 py-1 rounded-md text-sm ${
+                                link.active 
+                                    ? 'bg-primary text-primary-foreground' 
+                                    : 'hover:bg-muted'
+                            } ${!link.url ? 'pointer-events-none opacity-50' : ''}`}
+                            dangerouslySetInnerHTML={{ __html: link.label }}
+                        />
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
 export default function Courses({ courses }: CustomPageProps) {
     const [sheetOpen, setSheetOpen] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -300,17 +332,7 @@ export default function Courses({ courses }: CustomPageProps) {
                 
                 <div className="space-y-4">
                     <DataTable columns={columns} data={courses.data} />
-                    <div className="mt-4">
-                        <Pagination
-                            links={courses.links.map(link => ({
-                                ...link,
-                                url: link.url === undefined ? null : link.url
-                            }))}
-                            from={courses.from}
-                            to={courses.to}
-                            total={courses.total}
-                        />
-                    </div>
+                    <Pagination courses={courses} />
                 </div>
             </div>
         </AppLayout>

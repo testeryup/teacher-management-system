@@ -9,7 +9,7 @@ use App\Models\Degree;
 class DegreeController extends Controller
 {
     public function index(){
-        $degrees = Degree::paginate(10);
+        $degrees = Degree::all();
         return Inertia::render('Degrees/Index', ['degrees' => $degrees]);
     }
 
