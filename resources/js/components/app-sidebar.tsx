@@ -5,7 +5,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, GitFork, Hospital,UsersRound, 
-    GraduationCap, Notebook, LandPlot, CalendarCog  } from 'lucide-react';
+    GraduationCap, Notebook, LandPlot, CalendarCog, NotepadTextDashed  } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -121,6 +121,11 @@ export function AppSidebar() {
                 title: 'Lớp học',
                 href: '/classrooms',
                 icon: GitFork,
+            },
+            {
+                title: 'Tính lương',
+                href: '/salary',
+                icon: NotepadTextDashed,
             }
         );
     }

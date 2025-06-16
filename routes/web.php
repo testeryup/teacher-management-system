@@ -10,6 +10,7 @@ use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ClassroomController;
+use App\Http\Controllers\SalaryController;
 
 
 Route::get('/', function () {
@@ -35,7 +36,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/semesters/{semester}', [SemesterController::class, 'destroy'])->name('semesters.destroy');
         Route::put('/semesters/{semester}', [SemesterController::class, 'update'])->name('semesters.update');
 
-        
+        Route::get('/salary', [SalaryController::class, 'index'])->name('salary.index');
+        Route::post('/salary', [SalaryController::class, 'store'])->name('salary.store');
+        Route::post('/salary/{salaryConfig}/calculate', [SalaryController::class, 'calculate'])->name('salary.calculate');
+        Route::get('/salary/{salaryConfig}/report', [SalaryController::class, 'report'])->name('salary.report');
+        Route::patch('/salary/{salaryConfig}/close', [SalaryController::class, 'close'])->name('salary.close');
         // Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
     });
     
@@ -58,6 +63,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::get('/classrooms', [ClassroomController::class, 'index'])->name('classrooms.index');
         Route::post('/classrooms', [ClassroomController::class, 'store'])->name('classrooms.store');
+        Route::post('/classrooms/bulk', [ClassroomController::class, 'bulkStore'])->name('classrooms.bulk-store'); // Thêm route này
         Route::delete('/classrooms/{classroom}', [ClassroomController::class, 'destroy'])->name('classrooms.destroy');
         Route::put('/classrooms/{classroom}', [ClassroomController::class, 'update'])->name('classrooms.update');
         Route::get('/classrooms/filter', [ClassroomController::class, 'filter'])->name('classrooms.filter');

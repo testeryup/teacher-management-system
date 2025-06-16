@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationLink {
-  url: string | null;
+  url: string | null | undefined;
   label: string;
   active: boolean;
 }

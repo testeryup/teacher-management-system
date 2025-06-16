@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->unique();
             $table->string('code')->unique();
             $table->integer('credits');
             $table->integer('lessons');
+            $table->foreignId('department_id')->nullable()->constrained('departments')->onDelete('set null'); 
+            $table->decimal('course_coefficient', 3, 1)->default(1.0);
             $table->timestamps();
         });
     }

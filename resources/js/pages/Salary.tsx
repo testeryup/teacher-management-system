@@ -3,11 +3,22 @@ import { DataTable } from "@/components/ui/data-table";
 import AppLayout from "@/layouts/app-layout";
 import { BreadcrumbItem } from "@/types";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageProps } from '@inertiajs/core';
+import { Pagination } from '@/components/ui/pagination';
 import { toast, Toaster } from 'sonner';
-import { ColumnDef } from "@tanstack/react-table";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
     Sheet,
     SheetClose,
@@ -19,14 +30,6 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -36,7 +39,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal } from "lucide-react";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -45,54 +47,116 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Course interface khớp với backend
+// Updated Course interface
 interface Course {
     id: number;
     name: string;
     code: string;
     credits: number;
     lessons: number;
-    course_coefficient: number;
     department_id: number | null;
-    department?: Department;
+    department?: {
+        id: number;
+        name: string;
+        abbrName: string;
+    };
+    createdAt: string;
+    updatedAt: string;
 }
 
-// Department interface
+// Updated Department interface
 interface Department {
     id: number;
     name: string;
-    abbrName: string;
+    abbrName?: string;
 }
 
 interface PaginatedCourses {
     data: Course[];
-    links: any[];
     current_page: number;
     last_page: number;
     per_page: number;
     total: number;
+    from: number;
+    to: number;
+    links: {
+        url?: string;
+        label: string;
+        active: boolean;
+    }[];
+    departments: Department[];
 }
 
 interface CustomPageProps {
     courses: PaginatedCourses;
     departments: Department[];
+    flash?: {
+        message?: string;
+        error?: string;
+        success?: string;
+    };
 }
 
-// Course Actions Component
-function CourseActions({ course, departments }: { course: Course, departments: Department[] }) {
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [isUpdateSheetOpen, setIsUpdateSheetOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+// Updated columns with department
+// export const columns: ColumnDef<Course>[] = [
+//     {
+//         accessorKey: "id",
+//         header: "ID",
+//     },
+//     {
+//         accessorKey: "code",
+//         header: "Mã môn học",
+//     },
+//     {
+//         accessorKey: "name",
+//         header: "Tên môn học",
+//     },
+//     {
+//         accessorKey: "credits",
+//         header: "Số tín chỉ",
+//     },
+//     {
+//         accessorKey: "lessons",
+//         header: "Số tiết học",
+//     },
+//     {
+//         accessorKey: "department",
+//         header: "Khoa",
+//         cell: ({ row }) => {
+//             const department = row.getValue("department") as Course["department"];
+//             return <div>{department?.abbrName || 'Chưa phân khoa'}</div>;
+//         },
+//     },
+//     {
+//         id: "actions",
+//         header: () => <div className="text-center">Hành động</div>,
+//         cell: ({ row }) => {
+//             const course = row.original;
+//             return <CourseActions course={course} />;
+//         },
+//     },
+// ];
 
-    const { data: updateData, setData: setUpdateData, put, processing, reset: resetUpdate } = useForm({
+// Separate component for actions
+function CourseActions({ course, departments }: { course: Course, departments: Department[] }) {
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isUpdateSheetOpen, setIsUpdateSheetOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const { delete: destroy, put, processing } = useForm();
+    const { data: updateData, setData: setUpdateData, reset: resetUpdate } = useForm({
         name: course.name,
         credits: course.credits,
         lessons: course.lessons,
         department_id: course.department_id,
-        course_coefficient: course.course_coefficient
     });
+    useEffect(() => {
+        console.log('CourseActions state:', {
+            isUpdateSheetOpen,
+            dropdownOpen,
+            isDeleteDialogOpen
+        });
+    }, [isUpdateSheetOpen, dropdownOpen, isDeleteDialogOpen]);
 
-    const { delete: destroy } = useForm();
 
     const handleDelete = () => {
         destroy(route('courses.destroy', course.id), {
@@ -114,19 +178,20 @@ function CourseActions({ course, departments }: { course: Course, departments: D
                 setIsUpdateSheetOpen(false);
                 resetUpdate();
             },
-            onError: (errors) => {
-                if (errors.department_id) {
-                    toast.error(errors.department_id);
-                } else {
-                    toast.error('Cập nhật môn học thất bại');
-                }
+            onError: () => {
+                toast.error('Cập nhật môn học thất bại');
             }
         });
     };
 
     return (
         <>
-            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+            <DropdownMenu
+                open={dropdownOpen}
+                onOpenChange={(open) => {
+                    console.log('Dropdown state changing to:', open);
+                    setDropdownOpen(open);
+                }}>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                         <span className="sr-only">Mở menu</span>
@@ -137,7 +202,7 @@ function CourseActions({ course, departments }: { course: Course, departments: D
                     <DropdownMenuLabel>Hành động</DropdownMenuLabel>
                     <DropdownMenuItem
                         onSelect={(e) => {
-                            e.preventDefault();
+                            e.preventDefault(); // Prevent default behavior
                             setDropdownOpen(false);
                             setTimeout(() => setIsUpdateSheetOpen(true), 300);
                         }}
@@ -160,7 +225,7 @@ function CourseActions({ course, departments }: { course: Course, departments: D
 
             {/* Update Sheet */}
             <Sheet open={isUpdateSheetOpen} onOpenChange={setIsUpdateSheetOpen}>
-                <SheetContent className="w-[500px]">
+                <SheetContent>
                     <SheetHeader>
                         <SheetTitle>Chỉnh sửa môn học</SheetTitle>
                         <SheetDescription>
@@ -176,7 +241,6 @@ function CourseActions({ course, departments }: { course: Course, departments: D
                                 onChange={(e) => setUpdateData('name', e.target.value)}
                             />
                         </div>
-
                         <div className="grid gap-2">
                             <Label htmlFor="update-credits">Số tín chỉ</Label>
                             <Input
@@ -188,7 +252,6 @@ function CourseActions({ course, departments }: { course: Course, departments: D
                                 onChange={(e) => setUpdateData('credits', parseInt(e.target.value) || 1)}
                             />
                         </div>
-
                         <div className="grid gap-2">
                             <Label htmlFor="update-lessons">Số tiết học</Label>
                             <Input
@@ -199,20 +262,6 @@ function CourseActions({ course, departments }: { course: Course, departments: D
                                 onChange={(e) => setUpdateData('lessons', parseInt(e.target.value) || 1)}
                             />
                         </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="update-coefficient">Hệ số học phần (1.0 - 1.5)</Label>
-                            <Input
-                                id="update-coefficient"
-                                type="number"
-                                step="0.1"
-                                min="1.0"
-                                max="1.5"
-                                value={updateData.course_coefficient}
-                                onChange={(e) => setUpdateData('course_coefficient', parseFloat(e.target.value) || 1.0)}
-                            />
-                        </div>
-
                         <div className="grid gap-2">
                             <Label htmlFor="update-department">Khoa</Label>
                             <select
@@ -228,7 +277,7 @@ function CourseActions({ course, departments }: { course: Course, departments: D
                             </select>
                         </div>
                     </form>
-                    <SheetFooter>
+                    <SheetFooter className="mt-4">
                         <SheetClose asChild>
                             <Button variant="outline">Hủy</Button>
                         </SheetClose>
@@ -264,20 +313,21 @@ function CourseActions({ course, departments }: { course: Course, departments: D
 export default function Courses({ courses, departments }: CustomPageProps) {
     const { props } = usePage();
     const user = (props as any).auth?.user;
+    const isAdmin = user?.role === 'admin';
+    const isDepartmentHead = user?.role === 'department_head';
 
     const [sheetOpen, setSheetOpen] = useState(false);
-
-    // Form data khớp với backend validation
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         credits: 1,
         lessons: 1,
-        department_id: null as number | null,
-        course_coefficient: 1.0
+        department_id: null as number | null
     });
-
-    // Columns definition
     const columns: ColumnDef<Course>[] = [
+        {
+            accessorKey: "id",
+            header: "ID",
+        },
         {
             accessorKey: "code",
             header: "Mã môn học",
@@ -295,21 +345,6 @@ export default function Courses({ courses, departments }: CustomPageProps) {
             header: "Số tiết học",
         },
         {
-            accessorKey: "course_coefficient",
-            header: "Hệ số học phần",
-            cell: ({ row }) => {
-                const coefficient = row.getValue("course_coefficient") as number;
-                return (
-                    <span className={`font-medium px-2 py-1 rounded text-sm ${coefficient >= 1.4 ? 'bg-red-100 text-red-800' :
-                            coefficient >= 1.2 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
-                        }`}>
-                        {coefficient}
-                    </span>
-                );
-            },
-        },
-        {
             accessorKey: "department",
             header: "Khoa",
             cell: ({ row }) => {
@@ -322,9 +357,7 @@ export default function Courses({ courses, departments }: CustomPageProps) {
             header: () => <div className="text-center">Hành động</div>,
             cell: ({ row }) => {
                 const course = row.original;
-                return <div className="text-center">
-                    <CourseActions course={course} departments={departments} />
-                </div>;
+                return <CourseActions course={course} departments={departments} />;
             },
         },
     ];
@@ -337,12 +370,8 @@ export default function Courses({ courses, departments }: CustomPageProps) {
                 reset();
                 setSheetOpen(false);
             },
-            onError: (errors) => {
-                if (errors.department_id) {
-                    toast.error(errors.department_id);
-                } else {
-                    toast.error('Thêm môn học mới thất bại');
-                }
+            onError: () => {
+                toast.error('Thêm môn học mới thất bại');
             }
         });
     };
@@ -362,32 +391,30 @@ export default function Courses({ courses, departments }: CustomPageProps) {
             <div className="m-4">
                 <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
                     <SheetTrigger asChild>
-                        <Button className="mb-4 cursor-pointer">Thêm môn học mới</Button>
+                        <Button className="mb-4">Thêm môn học mới</Button>
                     </SheetTrigger>
-                    <SheetContent className="w-[500px]">
+                    <SheetContent>
                         <SheetHeader>
                             <SheetTitle>Thêm môn học mới</SheetTitle>
                             <SheetDescription>
                                 Nhập thông tin môn học ở đây, sau đó nhấn lưu
                             </SheetDescription>
                         </SheetHeader>
-
                         <form onSubmit={handleSubmit} id="course-form" className="space-y-6 p-4">
                             <div className="space-y-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="name">Tên môn học *</Label>
+                                    <Label htmlFor="name">Tên môn học</Label>
                                     <Input
                                         id="name"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
                                         placeholder="VD: Lập trình cơ bản"
-                                        required
                                     />
                                     {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="credits">Số tín chỉ *</Label>
+                                    <Label htmlFor="credits">Số tín chỉ</Label>
                                     <Input
                                         id="credits"
                                         type="number"
@@ -395,39 +422,23 @@ export default function Courses({ courses, departments }: CustomPageProps) {
                                         max="10"
                                         value={data.credits}
                                         onChange={(e) => setData('credits', parseInt(e.target.value) || 1)}
-                                        required
                                     />
                                     {errors.credits && <p className="text-sm text-red-500">{errors.credits}</p>}
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="lessons">Số tiết học *</Label>
+                                    <Label htmlFor="lessons">Số tiết học</Label>
                                     <Input
                                         id="lessons"
                                         type="number"
                                         min="1"
                                         value={data.lessons}
                                         onChange={(e) => setData('lessons', parseInt(e.target.value) || 1)}
-                                        required
                                     />
                                     {errors.lessons && <p className="text-sm text-red-500">{errors.lessons}</p>}
                                 </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="course_coefficient">Hệ số học phần (1.0 - 1.5) *</Label>
-                                    <Input
-                                        id="course_coefficient"
-                                        type="number"
-                                        step="0.1"
-                                        min="1.0"
-                                        max="1.5"
-                                        value={data.course_coefficient}
-                                        onChange={(e) => setData('course_coefficient', parseFloat(e.target.value) || 1.0)}
-                                        required
-                                    />
-                                    {errors.course_coefficient && <p className="text-sm text-red-500">{errors.course_coefficient}</p>}
-                                </div>
-
+                                {/* Department Field */}
                                 <div className="grid gap-2">
                                     <Label htmlFor="department_id">Khoa</Label>
                                     <select
@@ -445,15 +456,13 @@ export default function Courses({ courses, departments }: CustomPageProps) {
                                 </div>
                             </div>
                         </form>
-
                         <SheetFooter>
                             <SheetClose asChild>
-                                <Button variant="outline" type="button" className='cursor-pointer'>Thoát</Button>
+                                <Button variant="outline" type="button">Thoát</Button>
                             </SheetClose>
                             <Button
                                 type="submit"
                                 form="course-form"
-                                className='cursor-pointer'
                                 disabled={processing}
                             >
                                 {processing ? 'Đang xử lý...' : 'Thêm mới'}
@@ -463,12 +472,18 @@ export default function Courses({ courses, departments }: CustomPageProps) {
                 </Sheet>
 
                 <div className="space-y-4">
-                    <DataTable
-                        columns={columns}
-                        data={courses.data}
-                        searchKey="name"
-                        searchPlaceholder="Tìm kiếm môn học..."
-                    />
+                    <DataTable columns={columns} data={courses.data} />
+                    <div className="mt-4">
+                        <Pagination
+                            links={courses.links.map(link => ({
+                                ...link,
+                                url: link.url === undefined ? null : link.url
+                            }))}
+                            from={courses.from}
+                            to={courses.to}
+                            total={courses.total}
+                        />
+                    </div>
                 </div>
             </div>
         </AppLayout>

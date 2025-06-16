@@ -34,14 +34,42 @@ class Classroom extends Model
             'code' => 'nullable|string|max:10|unique:classrooms,code' . ($id ? ",$id" : ''),
         ];
     }
-    public function course(){
-        return $this->belongsTo(Course::class, 'course_id');
+
+    // Validation rules cho bulk creation
+    public static function bulkRules(){
+        return [
+            'course_id' => 'required|integer|exists:courses,id',
+            'semester_id' => 'required|integer|exists:semesters,id',
+            'teacher_id' => 'nullable|integer|exists:teachers,id',
+            'students_per_class' => 'required|integer|min:1|max:200',
+            'number_of_classes' => 'required|integer|min:1|max:20',
+            'class_name_prefix' => 'required|string|max:50',
+        ];
     }
-    public function teacher()
+
+    // Method để kiểm tra trùng tên lớp trong cùng học kỳ và môn học
+    public static function checkDuplicateInSemesterCourse($name, $semesterId, $courseId, $excludeId = null)
     {
-        return $this->belongsTo(Teacher::class, 'teacher_id');
+        $query = self::where('name', $name)
+            ->where('semester_id', $semesterId)
+            ->where('course_id', $courseId);
+            
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+        
+        return $query->exists();
     }
+
+    public function course(){
+        return $this->belongsTo(Course::class);
+    }
+
+    public function teacher(){
+        return $this->belongsTo(Teacher::class);
+    }
+
     public function semester(){
-        return $this->belongsTo(Semester::class, 'semester_id');
+        return $this->belongsTo(Semester::class);
     }
 }
