@@ -41,7 +41,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/salary/{salaryConfig}/calculate', [SalaryController::class, 'calculate'])->name('salary.calculate');
         Route::get('/salary/{salaryConfig}/report', [SalaryController::class, 'report'])->name('salary.report');
         Route::patch('/salary/{salaryConfig}/close', [SalaryController::class, 'close'])->name('salary.close');
-        // Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+        Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+
+        Route::get('/salary/{salaryConfig}/export-pdf', [SalaryController::class, 'exportPdf'])
+            ->name('salary.export-pdf');
+            
+        Route::get('/salary/{salaryConfig}/preview-pdf', [SalaryController::class, 'previewPdf'])
+            ->name('salary.preview-pdf');
     });
     
     Route::middleware('role:admin,department_head')->group(function (){

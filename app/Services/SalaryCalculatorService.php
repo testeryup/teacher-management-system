@@ -62,12 +62,13 @@ class SalaryCalculatorService
     }
 
     /**
-     * Tính lương cho tất cả lớp học trong tháng
+     * Tính lương cho tất cả lớp học trong học kỳ
      */
-    public function calculateSalariesForMonth(SalaryConfig $salaryConfig): array
+    public function calculateSalariesForSemester(SalaryConfig $salaryConfig): array
     {
-        // Lấy tất cả lớp học có giáo viên
+        // Lấy tất cả lớp học có giáo viên trong học kỳ này
         $classrooms = Classroom::with(['teacher.degree', 'course'])
+            ->where('semester_id', $salaryConfig->semester_id)
             ->whereNotNull('teacher_id')
             ->get();
 
@@ -104,7 +105,7 @@ class SalaryCalculatorService
     }
 
     /**
-     * Lấy báo cáo lương theo tháng
+     * Lấy báo cáo lương theo học kỳ
      */
     public function getSalaryReport(SalaryConfig $salaryConfig)
     {

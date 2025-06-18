@@ -279,7 +279,7 @@ export default function Index({ degrees }: CustomPageProps) {
                         </TableHeader>
                         <TableBody>
                             {
-                                degrees.data.map((degree: Degree) => (
+                                degrees?.data?.map((degree: Degree) => (
                                     <TableRow key={degree.id}>
                                         <TableCell className="font-medium">{degree.id}</TableCell>
                                         <TableCell>{degree.name}</TableCell>

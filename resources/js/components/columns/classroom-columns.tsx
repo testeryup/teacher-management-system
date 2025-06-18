@@ -155,7 +155,6 @@ export const createClassroomColumns = ({ onEdit, onDelete }: ClassroomColumnsPro
     enableHiding: false,
     cell: ({ row }) => {
       const classroom = row.original
-      console.log("check classroom orginal:", classroom.id);
       return (
         <div className="flex justify-center">
           <DropdownMenu>
