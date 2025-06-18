@@ -5,7 +5,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, GitFork, Hospital,UsersRound, 
-    GraduationCap, Notebook, LandPlot, CalendarCog, NotepadTextDashed, DollarSign  } from 'lucide-react';
+    GraduationCap, Notebook, LandPlot, CalendarCog, NotepadTextDashed, DollarSign, FileText  } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -126,6 +126,11 @@ export function AppSidebar() {
                 title: 'Tính lương',
                 href: '/salary',
                 icon: DollarSign,
+            },
+            {
+                title: 'Báo cáo',
+                href: '/reports',
+                icon: FileText,
             }
         );
     }

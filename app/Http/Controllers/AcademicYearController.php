@@ -18,10 +18,18 @@ class AcademicYearController extends Controller
     public function store(Request $request){
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'startDate' => 'required|date',
+                'name' => 'required|string|max:255|unique:academic_years,name',
+                'startDate' => 'required|date|before:endDate',
                 'endDate' => 'required|date|after:startDate',
                 'semesterCount' => 'required|integer|min:1|max:4',
+            ],[
+                'name.required' => 'Tên năm học là bắt buộc',
+                'name.unique' => 'Năm học này đã tồn tại',
+                'name.max' => 'Tên năm học không được vượt quá 255 ký tự',
+                'startDate.required' => 'Ngày bắt đầu là bắt buộc',
+                'startDate.before' => 'Ngày bắt đầu phải trước ngày kết thúc',
+                'endDate.required' => 'Ngày kết thúc là bắt buộc',
+                'endDate.after' => 'Ngày kết thúc phải sau ngày bắt đầu',
             ]);
             
             $academicYear = AcademicYear::create([
@@ -75,19 +83,52 @@ class AcademicYearController extends Controller
         }
     }
 
-    public function destroy(AcademicYear $academicyear){
+    public function destroy(AcademicYear $academicyear)
+    {
         try {
-            // Check for related records before deleting
-            if($academicyear->semesters()->count() > 0){
-                // Delete all related semesters first
-                $academicyear->semesters()->delete();
-            }
+            $user = auth()->user();
             
+            if (!$user->isAdmin()) {
+                abort(403, 'Chỉ Admin mới có quyền xóa năm học');
+            }
+
+            // FIX: Check for salary configs - CRITICAL CHECK
+            $hasSalaryConfigs = \App\Models\SalaryConfig::whereIn('semester_id', 
+                $academicyear->semesters()->pluck('id')
+            )->exists();
+            
+            if ($hasSalaryConfigs) {
+                return back()->withErrors([
+                    'reference' => 'KHÔNG THỂ XÓA: Năm học này có cấu hình lương. Xóa sẽ làm mất dữ liệu lương đã tính toán!'
+                ]);
+            }
+
+            // Check for classrooms
+            $hasClassrooms = \App\Models\Classroom::whereIn('semester_id', 
+                $academicyear->semesters()->pluck('id')
+            )->exists();
+            
+            if ($hasClassrooms) {
+                return back()->withErrors([
+                    'reference' => 'Không thể xóa năm học này vì có lớp học trong các học kỳ'
+                ]);
+            }
+
+            // Check for semesters
+            if ($academicyear->semesters()->count() > 0) {
+                return back()->withErrors([
+                    'reference' => 'Không thể xóa năm học này vì đang có học kỳ'
+                ]);
+            }
+
+            // Safe to delete
             $academicyear->delete();
+            
             return redirect()->route('academicyears.index')
-                ->with('message', 'Năm học đã được xóa thành công');
+                ->with('message', 'Xóa năm học thành công');
+                
         } catch (\Exception $e) {
-            return redirect()->route('academicyears.index')
+            return redirect()->back()
                 ->with('error', 'Không thể xóa năm học: ' . $e->getMessage());
         }
     }
@@ -95,9 +136,27 @@ class AcademicYearController extends Controller
     public function update(Request $request, AcademicYear $academicyear){
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'startDate' => 'required|date',
-                'endDate' => 'required|date|after:startDate',
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('academic_years', 'name')->ignore($academicYear->id), 
+                ],
+                'startDate' => [
+                    'required',
+                    'date',
+                    'before:endDate'
+                ],
+                'endDate' => [
+                    'required',
+                    'date',
+                    'after:startDate'
+                ],
+            ], [
+                'name.required' => 'Tên năm học là bắt buộc',
+                'name.unique' => 'Năm học này đã tồn tại',
+                'startDate.before' => 'Ngày bắt đầu phải trước ngày kết thúc',
+                'endDate.after' => 'Ngày kết thúc phải sau ngày bắt đầu',
             ]);
             
             $academicyear->update($validated);
@@ -112,4 +171,5 @@ class AcademicYearController extends Controller
                 ->withInput();
         }
     }
+
 }

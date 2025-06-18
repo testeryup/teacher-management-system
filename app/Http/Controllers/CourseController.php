@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Department;
 use Inertia\Inertia;
 use Exception;
+use Illuminate\Validation\Rule;
 
 class CourseController extends Controller
 {
@@ -38,11 +39,33 @@ class CourseController extends Controller
             $user = auth()->user();
             
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    'unique:courses,name'  // FIX: Check duplicate name
+                ],
+                'code' => [
+                    'required',
+                    'string',
+                    'max:10',
+                    'unique:courses,code'  // FIX: Check duplicate code
+                ],
                 'credits' => 'required|integer|min:1|max:10',
                 'lessons' => 'required|integer|min:1',
                 'department_id' => 'nullable|exists:departments,id',
                 'course_coefficient' => 'required|numeric|min:1.0|max:1.5',
+            ], [
+                // FIX: Custom error messages
+                'name.required' => 'Tên môn học là bắt buộc',
+                'name.unique' => 'Tên môn học này đã tồn tại',
+                'code.required' => 'Mã môn học là bắt buộc',
+                'code.unique' => 'Mã môn học này đã tồn tại',
+                'credits.required' => 'Số tín chỉ là bắt buộc',
+                'lessons.required' => 'Số tiết học là bắt buộc',
+                'course_coefficient.required' => 'Hệ số môn học là bắt buộc',
+                'course_coefficient.min' => 'Hệ số môn học phải từ 1.0 trở lên',
+                'course_coefficient.max' => 'Hệ số môn học không được vượt quá 1.5',
             ]);
 
             // Kiểm tra quyền tạo môn học cho trưởng khoa
@@ -58,6 +81,12 @@ class CourseController extends Controller
 
             return redirect()->route('courses.index')
                 ->with('message', 'Môn học đã được tạo thành công');
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // FIX: Properly handle validation errors
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Không thể tạo môn học: ' . $e->getMessage())
@@ -71,11 +100,27 @@ class CourseController extends Controller
             $user = auth()->user();
             
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('courses', 'name')->ignore($course->id)  // FIX: Ignore current record
+                ],
+                'code' => [
+                    'required',
+                    'string',
+                    'max:10',
+                    Rule::unique('courses', 'code')->ignore($course->id)  // FIX: Ignore current record
+                ],
                 'credits' => 'required|integer|min:1|max:10',
                 'lessons' => 'required|integer|min:1',
                 'department_id' => 'nullable|exists:departments,id',
                 'course_coefficient' => 'required|numeric|min:1.0|max:1.5',
+            ], [
+                'name.required' => 'Tên môn học là bắt buộc',
+                'name.unique' => 'Tên môn học này đã tồn tại',
+                'code.required' => 'Mã môn học là bắt buộc',
+                'code.unique' => 'Mã môn học này đã tồn tại',
             ]);
             
             // Kiểm tra quyền sửa môn học cho trưởng khoa
@@ -93,6 +138,11 @@ class CourseController extends Controller
             
             return redirect()->route('courses.index')
                 ->with('message', 'Môn học đã được cập nhật thành công');
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Không thể cập nhật môn học: ' . $e->getMessage())

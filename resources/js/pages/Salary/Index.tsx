@@ -36,7 +36,8 @@ import {
     DollarSign,
     Download,
     ChevronDown,
-    Eye
+    Eye,
+    RefreshCw
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -144,6 +145,32 @@ export default function SalaryIndex({ salaryConfigs, semesters }: Props) {
                         toast.error(errors.calculation);
                     } else {
                         toast.error('Tính lương thất bại');
+                    }
+                }
+            });
+        }
+    };
+
+    const handleRecalculate = (salaryConfig: SalaryConfig) => {
+        const semesterName = salaryConfig.semester?.name || 'N/A';
+
+        if (confirm(
+            `⚠️ CẢNH BÁO: Tính lại lương cho học kỳ ${semesterName}?\n\n` +
+            `• Dữ liệu lương cũ sẽ bị XÓA và tính lại từ đầu\n` +
+            `• Hành động này KHÔNG THỂ hoàn tác\n\n` +
+            `Bạn có chắc chắn muốn tiếp tục?`
+        )) {
+            router.post(route('salary.calculate', salaryConfig.id), {}, {
+                onSuccess: () => {
+                    toast.success('Tính lại lương thành công!');
+                },
+                onError: (errors) => {
+                    if (errors.status) {
+                        toast.error(errors.status);
+                    } else if (errors.calculation) {
+                        toast.error(errors.calculation);
+                    } else {
+                        toast.error('Tính lại lương thất bại');
                     }
                 }
             });
@@ -407,7 +434,6 @@ export default function SalaryIndex({ salaryConfigs, semesters }: Props) {
                                                                     Xem báo cáo
                                                                 </Button>
 
-                                                                {/* Thêm dropdown cho export options */}
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger asChild>
                                                                         <Button size="sm" variant="outline">
@@ -432,6 +458,19 @@ export default function SalaryIndex({ salaryConfigs, semesters }: Props) {
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             </>
+                                                        )}
+
+                                                        {/* FIX: Thêm nút tính lại cho trạng thái active */}
+                                                        {config.status === 'active' && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => handleRecalculate(config)}
+                                                                className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                                                            >
+                                                                <RefreshCw className="w-4 h-4 mr-1" />
+                                                                Tính lại
+                                                            </Button>
                                                         )}
 
                                                         {config.status === 'active' && (

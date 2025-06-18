@@ -123,7 +123,7 @@ export default function SalaryReport({ salaryConfig, salaryReport }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Báo cáo lương - ${salaryConfig.semester.name}`} />
+            <Head title={`Báo cáo lương - ${salaryConfig.semester?.name || 'NA'}`} />
 
             <div className="container mx-auto px-6 py-8 space-y-8">
                 {/* Header */}
@@ -137,7 +137,7 @@ export default function SalaryReport({ salaryConfig, salaryReport }: Props) {
                                 Báo cáo lương giảng viên
                             </h1>
                             <p className="text-muted-foreground text-lg">
-                                {salaryConfig.semester?.name || 'NA'} - {salaryConfig.semester?.academicYear.name || 'NA'}
+                                {salaryConfig.semester?.name || 'NA'} - {salaryConfig.semester?.academicYear?.name || 'NA'}
                             </p>
                         </div>
 

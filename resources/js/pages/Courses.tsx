@@ -301,8 +301,8 @@ export default function Courses({ courses, departments }: CustomPageProps) {
                 const coefficient = row.getValue("course_coefficient") as number;
                 return (
                     <span className={`font-medium px-2 py-1 rounded text-sm ${coefficient >= 1.4 ? 'bg-red-100 text-red-800' :
-                            coefficient >= 1.2 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
+                        coefficient >= 1.2 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
                         }`}>
                         {coefficient}
                     </span>
@@ -331,6 +331,25 @@ export default function Courses({ courses, departments }: CustomPageProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!data.name.trim()) {
+            toast.error('Tên môn học là bắt buộc');
+            return;
+        }
+
+        if (!data.credits || data.credits < 1 || data.credits > 10) {
+            toast.error('Số tín chỉ phải từ 1 đến 10');
+            return;
+        }
+
+        if (!data.lessons || data.lessons < 1) {
+            toast.error('Số tiết học phải lớn hơn 0');
+            return;
+        }
+
+        if (!data.course_coefficient || data.course_coefficient < 1.0 || data.course_coefficient > 1.5) {
+            toast.error('Hệ số môn học phải từ 1.0 đến 1.5');
+            return;
+        }
         post(route('courses.store'), {
             onSuccess: () => {
                 toast.success('Thêm môn học mới thành công');
@@ -338,7 +357,13 @@ export default function Courses({ courses, departments }: CustomPageProps) {
                 setSheetOpen(false);
             },
             onError: (errors) => {
-                if (errors.department_id) {
+                console.log('Course errors:', errors);
+                // FIX: Handle specific validation errors
+                if (errors.name) {
+                    toast.error(`Lỗi tên môn học: ${errors.name}`);
+                } else if (errors.code) {
+                    toast.error(`Lỗi mã môn học: ${errors.code}`);
+                } else if (errors.department_id) {
                     toast.error(errors.department_id);
                 } else {
                     toast.error('Thêm môn học mới thất bại');

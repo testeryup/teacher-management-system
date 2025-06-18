@@ -18,7 +18,7 @@ class Course extends Model
     
     protected $fillable = [
         'name',
-        'code',
+        'code', 
         'credits',
         'lessons',
         'department_id',
@@ -33,12 +33,37 @@ class Course extends Model
     public static function rules($id = null)
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                $id ? "unique:courses,name,{$id}" : 'unique:courses,name'
+            ],
+            'code' => [
+                'required',
+                'string',
+                'max:10',
+                $id ? "unique:courses,code,{$id}" : 'unique:courses,code'
+            ],
             'credits' => 'required|integer|min:1|max:10',
-            'lessons' => 'required|integer|min:1|max:100',
-            'code' => 'nullable|string|max:10|unique:courses,code' . ($id ? ",$id" : ''),
-            'department_id' => 'nullable|integer',
-            'course_coefficient' => 'nullable|numeric|min:1.0|max:1.5',
+            'lessons' => 'required|integer|min:1',
+            'department_id' => 'nullable|exists:departments,id',
+            'course_coefficient' => 'required|numeric|min:1.0|max:1.5',
+        ];
+    }
+
+    public static function messages()
+    {
+        return [
+            'name.required' => 'Tên môn học là bắt buộc',
+            'name.unique' => 'Tên môn học này đã tồn tại',
+            'code.required' => 'Mã môn học là bắt buộc',
+            'code.unique' => 'Mã môn học này đã tồn tại',
+            'credits.required' => 'Số tín chỉ là bắt buộc',
+            'lessons.required' => 'Số tiết học là bắt buộc',
+            'course_coefficient.required' => 'Hệ số môn học là bắt buộc',
+            'course_coefficient.min' => 'Hệ số môn học phải từ 1.0 trở lên',
+            'course_coefficient.max' => 'Hệ số môn học không được vượt quá 1.5',
         ];
     }
     

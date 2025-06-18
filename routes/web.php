@@ -11,6 +11,7 @@ use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\ReportController;
 
 
 Route::get('/', function () {
@@ -73,6 +74,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/classrooms/{classroom}', [ClassroomController::class, 'destroy'])->name('classrooms.destroy');
         Route::put('/classrooms/{classroom}', [ClassroomController::class, 'update'])->name('classrooms.update');
         Route::get('/classrooms/filter', [ClassroomController::class, 'filter'])->name('classrooms.filter');
+        Route::get('/classrooms/semesters-by-year', [ClassroomController::class, 'getSemestersByAcademicYear'])
+            ->name('classrooms.semesters-by-year');
+
+        // UC4 - Reports
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            
+            // UC4.1 - Teacher yearly report
+            Route::get('/teacher-yearly', [ReportController::class, 'teacherYearlyReport'])->name('teacher-yearly');
+            
+            // UC4.2 - Department report  
+            Route::get('/department', [ReportController::class, 'departmentReport'])->name('department');
+            
+            // UC4.3 - School report
+            Route::get('/school', [ReportController::class, 'schoolReport'])->name('school');
+            
+            // Export PDFs
+            Route::get('/export-pdf', [ReportController::class, 'exportPdf'])->name('export-pdf');
+        });
     });
 });
 

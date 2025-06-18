@@ -7,6 +7,7 @@ use App\Models\Teacher;
 use App\Models\Degree;
 use App\Models\Department;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 
 class TeacherController extends Controller
 {
@@ -42,17 +43,39 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'fullName' => 'required|string|max:255',
             'DOB' => 'required|date',
-            'phone' => 'required|string|max:10',
-            'email' => 'required|string|max:255|email',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{10,11}$/',
+                Rule::unique('teachers', 'phone')->ignore($teacher->id)  // FIX: Ignore current record
+            ],
+            'email' => [
+                'required',
+                'string',
+                'max:255',  
+                'email',
+                Rule::unique('teachers', 'email')->ignore($teacher->id)  // FIX: Ignore current record
+            ],
             'degree_id' => 'required|exists:degrees,id',
             'department_id' => 'required|exists:departments,id'
+        ], [
+            'phone.required' => 'Số điện thoại là bắt buộc',
+            'phone.regex' => 'Số điện thoại chỉ được chứa số và có độ dài 10-11 chữ số',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng',
+            'email.unique' => 'Email này đã được sử dụng',
         ]);
-        if ($user->isDepartmentHead() && $teacher['department_id'] != $user->department_id && $validated['department_id'] != $user->department_id) {
+        
+        if ($user->isDepartmentHead() && $teacher->department_id != $user->department_id && $validated['department_id'] != $user->department_id) {
             return back()->withErrors(['department_id' => 'Bạn chỉ có thể sửa giáo viên trong khoa của mình']);
         }
-        $teacher->update($validated);
         
-        return redirect()->route('teachers.index')->with('message', 'Thông tin giáo viên đã cập nhật thành công');
+        try {
+            $teacher->update($validated);
+            return redirect()->route('teachers.index')
+                ->with('message', 'Thông tin giáo viên đã cập nhật thành công');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Không thể cập nhật giáo viên: ' . $e->getMessage()]);
+        }
     }
 
     public function store(Request $request){
@@ -61,19 +84,44 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'fullName' => 'required|string|max:255',
             'DOB' => 'required|date',
-            'phone' => 'required|string|max:10',
-            'email' => 'required|string|max:255|email',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{10,11}$/',  // FIX: Chỉ cho phép số, 10-11 chữ số
+                'unique:teachers,phone'    // FIX: Không trùng SDT
+            ],
+            'email' => [
+                'required',
+                'string',
+                'max:255',
+                'email',
+                'unique:teachers,email'    // FIX: Không trùng email
+            ],
             'degree_id' => 'required|exists:degrees,id',
             'department_id' =>'required|exists:departments,id'
+        ], [
+            // FIX: Custom error messages
+            'phone.required' => 'Số điện thoại là bắt buộc',
+            'phone.regex' => 'Số điện thoại chỉ được chứa số và có độ dài 10-11 chữ số',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng',
+            'email.unique' => 'Email này đã được sử dụng',
+            'fullName.required' => 'Họ tên là bắt buộc',
+            'DOB.required' => 'Ngày sinh là bắt buộc',
+            'degree_id.required' => 'Bằng cấp là bắt buộc',
+            'department_id.required' => 'Khoa là bắt buộc',
         ]);
 
         if ($user->isDepartmentHead() && $validated['department_id'] != $user->department_id) {
             return back()->withErrors(['department_id' => 'Bạn chỉ có thể tạo giáo viên trong khoa của mình']);
         }
 
-        Teacher::create($validated);
-        
-        return redirect()->route('teachers.index')->with('message', 'Giáo viên đã được thêm thành công');
+        try {
+            Teacher::create($validated);
+            return redirect()->route('teachers.index')
+                ->with('message', 'Giáo viên đã được thêm thành công');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Không thể tạo giáo viên: ' . $e->getMessage()]);
+        }
     }
 
     public function destroy(Teacher $teacher){

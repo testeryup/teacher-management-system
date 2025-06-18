@@ -120,6 +120,21 @@ export default function Index({ degrees }: CustomPageProps) {
     };
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        console.log("check data:", data);
+        if (!data.name.trim()) {
+            toast.error('Tên bằng cấp là bắt buộc');
+            return;
+        }
+
+        if (!data.baseSalaryFactor || data.baseSalaryFactor <= 0) {
+            toast.error('Hệ số lương phải lớn hơn 0');
+            return;
+        }
+
+        if (data.baseSalaryFactor > 5.0) {
+            toast.error('Hệ số lương không được vượt quá 5.0');
+            return;
+        }
         if (!isUpdate) {
             post(route('degrees.store'), {
                 onSuccess: () => {
@@ -127,7 +142,8 @@ export default function Index({ degrees }: CustomPageProps) {
                     reset();
                     setSheetOpen(false);
                 },
-                onError: () => {
+                onError: (errors) => {
+                    console.log("check errors onError:", errors);
                     toast.error('Thêm bằng cấp mới thất bại');
                     reset();
                 }
@@ -249,21 +265,6 @@ export default function Index({ degrees }: CustomPageProps) {
                     </SheetContent>
                 </Sheet>
             </div>
-            {/* <div className="m-4">
-                <div>
-                    {flash?.message && (
-                        <Alert>
-                            <Megaphone className="h-4 w-4" />
-                            <AlertTitle>Thông báo</AlertTitle>
-                            <AlertDescription>
-                                {flash.message}
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
-                </div>
-
-            </div> */}
             {degrees.data.length > 0 ? (
                 <div className="m-4">
                     <Table>
@@ -323,7 +324,7 @@ export default function Index({ degrees }: CustomPageProps) {
                 )
             }
             <div className="mx-4">
-                <Pagination 
+                <Pagination
                     links={degrees.links}
                     from={degrees.from}
                     to={degrees.to}

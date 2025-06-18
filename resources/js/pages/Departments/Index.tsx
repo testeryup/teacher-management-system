@@ -94,6 +94,29 @@ export default function Index({ departments }: CustomPageProps) {
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const [pendingDeleteName, setPendingDeleteName] = useState<string | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const validateForm = () => {
+        if (!data.name.trim()) {
+            toast.error('Tên khoa là bắt buộc');
+            return false;
+        }
+
+        if (!data.abbrName.trim()) {
+            toast.error('Tên viết tắt là bắt buộc');
+            return false;
+        }
+
+        if (data.name.length > 255) {
+            toast.error('Tên khoa không được vượt quá 255 ký tự');
+            return false;
+        }
+
+        if (data.abbrName.length > 10) {
+            toast.error('Tên viết tắt không được vượt quá 10 ký tự');
+            return false;
+        }
+
+        return true;
+    };
     const handleDelete = (id: number, name: string) => {
         setPendingDeleteId(id);
         setPendingDeleteName(name);
@@ -107,11 +130,15 @@ export default function Index({ departments }: CustomPageProps) {
     };
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
         post(route('departments.store'), {
             onSuccess: () => {
                 toast.success('Thêm khoa mới thành công');
                 reset();
                 setSheetOpen(false);
+                
             },
             onError: () => {
                 toast.error('Thêm khoa mới thất bại');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo cáo lương - {{ $salaryConfig->semester->name }}</title>
+    <title>Báo cáo lương - {{ isset($salaryConfig->semester->name) ? $salaryConfig->semester->name : 'NA' }}</title>
     <style>
         * {
             margin: 0;
@@ -182,7 +182,7 @@
     <!-- Header -->
     <div class="header">
         <h1>Báo cáo lương giảng viên</h1>
-        <div class="subtitle">{{ $salaryConfig->semester->name }} - {{ $salaryConfig->semester->academicYear->name }}</div>
+        <div class="subtitle">{{ isset($salaryConfig->semester->name) ?  $salaryConfig->semester->name : 'NA'}} - {{ isset($salaryConfig->semester->academicYear->name) ? $salaryConfig->semester->academicYear->name : 'NA' }}</div>
         <div class="info">
             Trạng thái: {{ $statusLabels[$salaryConfig->status] ?? $salaryConfig->status }} | 
             Tiền/tiết: {{ number_format($salaryConfig->base_salary_per_lesson, 0, ',', '.') }}.VND |

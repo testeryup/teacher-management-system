@@ -141,8 +141,29 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
             setIsDialogOpen(false);
         }
     };
+    const validatePhone = (phone: string) => {
+        const phoneRegex = /^[0-9]{10,11}$/;
+        return phoneRegex.test(phone);
+    };
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // FIX: Client validation trước khi submit
+        if (!data.fullName.trim()) {
+            toast.error('Họ tên là bắt buộc');
+            return;
+        }
+
+        if (!validatePhone(data.phone)) {
+            toast.error('Số điện thoại chỉ được chứa số và có độ dài 10-11 chữ số');
+            return;
+        }
+
+        if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+            toast.error('Email không hợp lệ');
+            return;
+        }
+
         if (!isUpdate) {
             post(route('teachers.store'), {
                 onSuccess: () => {
@@ -150,13 +171,21 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                     reset();
                     setSheetOpen(false);
                 },
-                onError: () => {
-                    toast.error('Thêm giáo viên mới thất bại');
-                    reset();
+                onError: (errors) => {
+                    console.log('Teacher store errors:', errors);
+                    // FIX: Handle specific errors
+                    if (errors.phone) {
+                        toast.error(`Lỗi SDT: ${errors.phone}`);
+                    } else if (errors.email) {
+                        toast.error(`Lỗi email: ${errors.email}`);
+                    } else if (errors.department_id) {
+                        toast.error(errors.department_id);
+                    } else {
+                        toast.error('Thêm giáo viên mới thất bại');
+                    }
                 }
-            })
-        }
-        else {
+            });
+        } else {
             if (pendingUpdateId !== null) {
                 put(route('teachers.update', pendingUpdateId), {
                     onSuccess: () => {
@@ -164,16 +193,21 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                         reset();
                         setSheetOpen(false);
                         setIsUpdate(false);
+                        setPendingUpdateId(null);
                     },
-                    onError: () => {
-                        toast.error('Cập nhật giáo viên thất bại');
-                        reset();
-                        setIsUpdate(false);
+                    onError: (errors) => {
+                        console.log('Teacher update errors:', errors);
+                        if (errors.phone) {
+                            toast.error(`Lỗi SDT: ${errors.phone}`);
+                        } else if (errors.email) {
+                            toast.error(`Lỗi email: ${errors.email}`);
+                        } else if (errors.department_id) {
+                            toast.error(errors.department_id);
+                        } else {
+                            toast.error('Cập nhật giáo viên thất bại');
+                        }
                     }
                 });
-            }
-            else {
-                toast.error("Thông tin giáo viên không được để trống khi update");
             }
         }
     }
@@ -251,16 +285,23 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
 
                                 {/* Phone Field */}
                                 <div className="grid gap-2">
-                                    <Label htmlFor="phone">
-                                        Số điện thoại
-                                    </Label>
+                                    <Label htmlFor="phone" >Số điện thoại</Label>
                                     <Input
                                         id="phone"
                                         value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
-                                        className="w-full"
+                                        onChange={(e) => {
+                                            // FIX: Chỉ cho phép nhập số
+                                            const value = e.target.value.replace(/[^0-9]/g, '');
+                                            if (value.length <= 11) {
+                                                setData('phone', value);
+                                            }
+                                        }}
+                                        placeholder="0123456789"
+                                        pattern="[0-9]{10,11}"
+                                        maxLength={11}
+                                        className={`col-span-3 ${errors.phone ? 'border-red-500' : ''}`}
                                     />
-                                    {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+                                    {errors.phone && <p className="col-span-4 text-sm text-red-500">{errors.phone}</p>}
                                 </div>
 
                                 {/* Email Field */}
@@ -335,7 +376,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                     {flash?.message && (
                         <Alert>
                             <Megaphone className="h-4 w-4" />
-                            <AlertTitle>Thông báo</AlertTitle>
+                            <AlertTitle>Thông báo</AlertDialogTitle>
                             <AlertDescription>
                                 {flash.message}
                             </AlertDescription>
@@ -416,7 +457,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                 )
             }
             <div className="mx-4">
-                <Pagination 
+                <Pagination
                     links={teachers.links}
                     from={teachers.from}
                     to={teachers.to}

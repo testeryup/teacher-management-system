@@ -19,4 +19,16 @@ class AcademicYear extends Model
     public function semesters(){
         return $this->hasMany(Semester::class, 'academicYear_id');
     }
+    public function hasSalaryConfigs(): bool
+    {
+        return \App\Models\SalaryConfig::whereIn('semester_id', 
+            $this->semesters()->pluck('id')
+        )->exists();
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return !$this->hasSalaryConfigs() 
+            && !$this->semesters()->exists();
+    }
 }

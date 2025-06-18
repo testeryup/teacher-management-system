@@ -66,26 +66,36 @@ class SalaryCalculatorService
      */
     public function calculateSalariesForSemester(SalaryConfig $salaryConfig): array
     {
-        // Lấy tất cả lớp học có giáo viên trong học kỳ này
-        $classrooms = Classroom::with(['teacher.degree', 'course'])
-            ->where('semester_id', $salaryConfig->semester_id)
-            ->whereNotNull('teacher_id')
-            ->get();
+        // FIX: Eager load tất cả relationships cần thiết
+        $classrooms = Classroom::with([
+            'teacher.degree', 
+            'teacher.department',
+            'course',
+            'semester'
+        ])
+        ->where('semester_id', $salaryConfig->semester_id)
+        ->whereNotNull('teacher_id')
+        ->get();
 
         $results = [];
         $errors = [];
+        $bulkInsertData = [];
+
+        // FIX: Xóa dữ liệu cũ trước khi tính mới (nếu tính lại)
+        if ($salaryConfig->status === 'active') {
+            TeacherSalary::where('salary_config_id', $salaryConfig->id)->delete();
+        }
 
         foreach ($classrooms as $classroom) {
             try {
                 $salaryData = $this->calculateSalaryForClassroom($classroom, $salaryConfig);
                 
-                // Tạo hoặc cập nhật record
-                TeacherSalary::updateOrCreate([
-                    'teacher_id' => $salaryData['teacher_id'],
-                    'classroom_id' => $salaryData['classroom_id'],
-                    'salary_config_id' => $salaryData['salary_config_id'],
-                ], $salaryData);
-
+                // FIX: Collect data để bulk insert thay vì từng query
+                $bulkInsertData[] = array_merge($salaryData, [
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                
                 $results[] = $salaryData;
             } catch (\Exception $e) {
                 $errors[] = [
@@ -94,6 +104,11 @@ class SalaryCalculatorService
                     'error' => $e->getMessage()
                 ];
             }
+        }
+
+        // FIX: Bulk insert thay vì N queries
+        if (!empty($bulkInsertData)) {
+            TeacherSalary::insert($bulkInsertData);
         }
 
         return [

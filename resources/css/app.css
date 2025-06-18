@@ -157,3 +157,19 @@
         @apply bg-background text-foreground;
     }
 }
+
+.filter-badge {
+    @apply inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium;
+}
+
+.filter-badge button {
+    @apply ml-1 text-blue-600 hover:text-blue-800;
+}
+
+.filter-section {
+    @apply border rounded-lg p-4 bg-gray-50;
+}
+
+.filter-grid {
+    @apply grid grid-cols-1 md:grid-cols-4 gap-4;
+}

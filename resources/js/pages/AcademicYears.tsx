@@ -127,14 +127,21 @@ export default function Index({ academicYears }: CustomPageProps) {
         if (pendingDeleteId !== null) {
             destroy(route('academicyears.destroy', pendingDeleteId), {
                 onSuccess: () => {
-                    toast.success('Xoá năm học thành công');
+                    toast.success('Xóa năm học thành công');
                     setIsDialogOpen(false);
+                    setPendingDeleteId(null);
+                    setPendingDeleteName('');
                 },
                 onError: (errors) => {
-                    if (errors.error) {
-                        toast.error(errors.error as string);
+                    if (errors.reference) {
+                        // FIX: Show critical warning for salary configs
+                        if (errors.reference?.includes('cấu hình lương')) {
+                            toast.error(errors.reference, { duration: 10000 });
+                        } else {
+                            toast.error(errors.reference);
+                        }
                     } else {
-                        toast.error('Không thể xoá năm học này');
+                        toast.error('Xóa năm học thất bại');
                     }
                     setIsDialogOpen(false);
                 }

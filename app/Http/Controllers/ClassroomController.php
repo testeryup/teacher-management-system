@@ -16,46 +16,83 @@ class ClassroomController extends Controller
     /**
      * Display a listing of the classrooms.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         
+        // FIX: Get filter parameters
+        $academicYearId = $request->get('academic_year_id');
+        $semesterId = $request->get('semester_id');
+        $search = $request->get('search');
+        
         if ($user->isAdmin()) {
-            // Admin xem tất cả lớp học
-            $classrooms = Classroom::with(['course.department', 'semester.academicYear', 'teacher.department'])->paginate(10);
+            $query = Classroom::with(['course.department', 'semester.academicYear', 'teacher.department']);
+            
+            // Get all data for admin
             $courses = Course::with('department')->get();
             $teachers = Teacher::with(['department', 'degree'])->get();
-        } else if ($user->isDepartmentHead()) {
-            // Trưởng khoa chỉ xem lớp học thuộc khoa của mình
-            $classrooms = Classroom::with(['course.department', 'semester.academicYear', 'teacher.department'])
+            $academicYears = AcademicYear::with('semesters')->get();
+            $semesters = Semester::with('academicYear')->get();
+            
+        } elseif ($user->isDepartmentHead()) {
+            $query = Classroom::with(['course.department', 'semester.academicYear', 'teacher.department'])
                 ->whereHas('course', function ($query) use ($user) {
                     $query->where('department_id', $user->department_id);
-                })
-                ->paginate(10);
+                });
             
-            // Chỉ lấy môn học thuộc khoa của trưởng khoa
+            // Filtered data for department head
             $courses = Course::with('department')
                 ->where('department_id', $user->department_id)
                 ->get();
-            
-            // Chỉ lấy giáo viên thuộc khoa của trưởng khoa
             $teachers = Teacher::with(['department', 'degree'])
                 ->where('department_id', $user->department_id)
                 ->get();
+            $academicYears = AcademicYear::with('semesters')->get();
+            $semesters = Semester::with('academicYear')->get();
+            
         } else {
-            // User thường không có quyền truy cập
             abort(403, 'Bạn không có quyền truy cập trang này.');
         }
         
-        $academicYears = AcademicYear::all();
-        $semesters = Semester::with('academicYear')->get();
+        // Apply filters
+        if ($academicYearId) {
+            $query->whereHas('semester', function($q) use ($academicYearId) {
+                $q->where('academicYear_id', $academicYearId);
+            });
+        }
         
+        if ($semesterId) {
+            $query->where('semester_id', $semesterId);
+        }
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('course', function($subQ) use ($search) {
+                      $subQ->where('name', 'like', "%{$search}%")
+                           ->orWhere('code', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('teacher', function($subQ) use ($search) {
+                      $subQ->where('fullName', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        $classrooms = $query->orderBy('created_at', 'desc')->paginate(10);
+        
+        // FIX: ALWAYS pass filters object, even if empty
         return Inertia::render('Classrooms', [
             'classrooms' => $classrooms,
             'courses' => $courses,
             'academicYears' => $academicYears,
             'semesters' => $semesters,
             'teachers' => $teachers,
+            // FIX: Always provide filters object
+            'filters' => [
+                'academic_year_id' => $academicYearId,
+                'semester_id' => $semesterId,
+                'search' => $search,
+            ]
         ]);
     }
 
@@ -270,5 +307,22 @@ class ClassroomController extends Controller
             return redirect()->route('classrooms.index')
                 ->with('error', 'Không thể xóa lớp học: ' . $e->getMessage());
         }
+    }
+
+    // FIX: Add new method to get semesters by academic year
+    public function getSemestersByAcademicYear(Request $request)
+    {
+        $academicYearId = $request->get('academic_year_id');
+        
+        if (!$academicYearId) {
+            return response()->json(['semesters' => []]);
+        }
+        
+        $semesters = Semester::where('academicYear_id', $academicYearId)
+            ->with('academicYear')
+            ->orderBy('name')
+            ->get();
+        
+        return response()->json(['semesters' => $semesters]);
     }
 }
