@@ -191,11 +191,15 @@ class DashboardController extends Controller
             ->limit(3)
             ->get();
 
+
         foreach ($recentClassrooms as $classroom) {
+            $teacherInfo = $classroom->teacher 
+                ? "GV {$classroom->teacher->fullName}" 
+                : "Chưa phân công GV";
             $activities[] = [
                 'type' => 'classroom_added',
                 'title' => "Tạo lớp học: {$classroom->name}",
-                'subtitle' => "Môn {$classroom->course->name} - GV {$classroom->teacher->fullName}",
+                'subtitle' => "Môn {$classroom->course->name} - {$teacherInfo}",
                 'time' => $classroom->created_at->diffForHumans(),
                 'icon' => 'book-open',
                 'color' => 'blue'

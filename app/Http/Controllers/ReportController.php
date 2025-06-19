@@ -41,57 +41,59 @@ class ReportController extends Controller
     /**
      * FIX: Helper method để lấy data báo cáo teacher yearly
      */
-    private function getTeacherYearlyData($teacherId, $academicYearId)
-    {
-        $user = auth()->user();
+private function getTeacherYearlyData($teacherId, $academicYearId)
+{
+    $user = auth()->user();
 
-        // Check permission
-        if ($user->isDepartmentHead()) {
-            $teacher = Teacher::find($teacherId);
-            if ($teacher->department_id !== $user->department_id) {
-                abort(403, 'Bạn chỉ có thể xem báo cáo giáo viên trong khoa của mình');
-            }
+    // Check permission
+    if ($user->isDepartmentHead()) {
+        $teacher = Teacher::find($teacherId);
+        if ($teacher->department_id !== $user->department_id) {
+            abort(403, 'Bạn chỉ có thể xem báo cáo giáo viên trong khoa của mình');
         }
-
-        $teacher = Teacher::with(['department', 'degree'])->find($teacherId);
-        $academicYear = AcademicYear::with('semesters')->find($academicYearId);
-
-        $salaryData = TeacherSalary::with([
-            'salaryConfig.semester',
-            'classroom.course'
-        ])
-        ->where('teacher_id', $teacherId)
-        ->whereHas('salaryConfig.semester', function($q) use ($academicYearId) {
-            $q->where('academicYear_id', $academicYearId);
-        })
-        ->get()
-        ->groupBy('salaryConfig.semester.name');
-
-        // Calculate totals
-        $totalSalary = 0;
-        $totalClasses = 0;
-        $totalLessons = 0;
-        
-        foreach ($salaryData as $semesterSalaries) {
-            foreach ($semesterSalaries as $salary) {
-                $totalSalary += (float) ($salary->total_salary ?? 0);
-                $totalClasses += 1;
-                $totalLessons += (float) ($salary->converted_lessons ?? 0);
-            }
-        }
-
-        return [
-            'teacher' => $teacher,
-            'academicYear' => $academicYear,
-            'salaryData' => $salaryData,
-            'summary' => [
-                'totalSalary' => $totalSalary,
-                'totalClasses' => $totalClasses,
-                'totalLessons' => $totalLessons,
-                'averageSalaryPerClass' => $totalClasses > 0 ? $totalSalary / $totalClasses : 0
-            ]
-        ];
     }
+
+    $teacher = Teacher::with(['department', 'degree'])->find($teacherId);
+    $academicYear = AcademicYear::with('semesters')->find($academicYearId);
+
+    // FIX: Query với relationship đúng tên cột
+    $salaryData = TeacherSalary::with([
+        'salaryConfig.semester',
+        'classroom.course'
+    ])
+    ->where('teacher_id', $teacherId)
+    ->whereHas('salaryConfig.semester', function($q) use ($academicYearId) {
+        // FIX: Sử dụng tên cột đúng trong database
+        $q->where('academicYear_id', $academicYearId); // Thay vì 'academicYear_id'
+    })
+    ->get()
+    ->groupBy('salaryConfig.semester.name');
+
+    // Calculate totals
+    $totalSalary = 0;
+    $totalClasses = 0;
+    $totalLessons = 0;
+    
+    foreach ($salaryData as $semesterSalaries) {
+        foreach ($semesterSalaries as $salary) {
+            $totalSalary += (float) ($salary->total_salary ?? 0);
+            $totalClasses += 1;
+            $totalLessons += (float) ($salary->converted_lessons ?? 0);
+        }
+    }
+
+    return [
+        'teacher' => $teacher,
+        'academicYear' => $academicYear,
+        'salaryData' => $salaryData,
+        'summary' => [
+            'totalSalary' => $totalSalary,
+            'totalClasses' => $totalClasses,
+            'totalLessons' => $totalLessons,
+            'averageSalaryPerClass' => $totalClasses > 0 ? $totalSalary / $totalClasses : 0
+        ]
+    ];
+}
 
     /**
      * FIX: Helper method để lấy data báo cáo department
@@ -312,35 +314,52 @@ class ReportController extends Controller
     /**
      * FIX: Export PDF methods sử dụng helper
      */
-    private function exportTeacherYearlyPdf(Request $request)
-    {
-        $validated = $request->validate([
-            'teacher_id' => 'required|exists:teachers,id',
-            'academic_year_id' => 'required|exists:academic_years,id'
-        ]);
+private function exportTeacherYearlyPdf(Request $request)
+{
+    $validated = $request->validate([
+        'teacher_id' => 'required|exists:teachers,id',
+        'academic_year_id' => 'required|exists:academic_years,id'
+    ]);
 
-        // FIX: Dùng helper method thay vì getData()
-        $reportData = $this->getTeacherYearlyData($validated['teacher_id'], $validated['academic_year_id']);
-        
-        // FIX: Convert to array for PDF template
-        $pdfData = [
-            'teacher' => $reportData['teacher']->toArray(),
-            'academicYear' => $reportData['academicYear']->toArray(),
-            'salaryData' => $reportData['salaryData']->toArray(),
-            'summary' => $reportData['summary']
-        ];
-        
-        $pdf = Pdf::loadView('reports.teacher-yearly-pdf', $pdfData);
-        $pdf->setPaper('A4', 'portrait');
-        
-        $filename = sprintf(
-            'bao-cao-gv-%s-%s.pdf',
-            \Illuminate\Support\Str::slug($reportData['teacher']->fullName),
-            $reportData['academicYear']->name
-        );
-        
-        return $pdf->download($filename);
+    // FIX: Get data và convert properly
+    $reportData = $this->getTeacherYearlyData($validated['teacher_id'], $validated['academic_year_id']);
+    
+    // FIX: Convert arrays to objects để PDF template có thể dùng arrow notation
+    $pdfData = [
+        'teacher' => (object) $reportData['teacher']->toArray(),
+        'academicYear' => (object) $reportData['academicYear']->toArray(),
+        'salaryData' => $reportData['salaryData']->map(function ($semesterSalaries) {
+            return collect($semesterSalaries)->map(function ($salary) {
+                // FIX: Ensure classroom and course are objects
+                $salaryArray = $salary->toArray();
+                $salaryArray['classroom'] = (object) $salary->classroom->toArray();
+                $salaryArray['classroom']->course = (object) $salary->classroom->course->toArray();
+                return (object) $salaryArray;
+            });
+        })->toArray(),
+        'summary' => $reportData['summary']
+    ];
+
+    // FIX: Add department and degree as objects
+    if (isset($reportData['teacher']->department)) {
+        $pdfData['teacher']->department = (object) $reportData['teacher']->department->toArray();
     }
+    
+    if (isset($reportData['teacher']->degree)) {
+        $pdfData['teacher']->degree = (object) $reportData['teacher']->degree->toArray();
+    }
+
+    $pdf = Pdf::loadView('reports.teacher-yearly-pdf', $pdfData);
+    $pdf->setPaper('A4', 'portrait');
+    
+    $filename = sprintf(
+        'bao-cao-gv-%s-%s.pdf',
+        \Illuminate\Support\Str::slug($reportData['teacher']->fullName),
+        $reportData['academicYear']->name
+    );
+    
+    return $pdf->download($filename);
+}
 
     private function exportDepartmentPdf(Request $request)
     {
