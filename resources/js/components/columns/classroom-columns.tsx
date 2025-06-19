@@ -30,7 +30,7 @@ export interface Classroom {
   semester: {
     id: number
     name: string
-    academic_year: {
+    academicYear: {
       id: number
       name: string
     }
@@ -111,7 +111,7 @@ export const createClassroomColumns = ({ onEdit, onDelete }: ClassroomColumnsPro
       return (
         <div className="text-left">
           <div>{semester?.name || ''}</div>
-          <div className="text-sm text-muted-foreground">{semester?.academic_year?.name || ''}</div>
+          <div className="text-sm text-muted-foreground">{semester?.academicYear?.name || ''}</div>
         </div>
       )
     },

@@ -39,12 +39,12 @@ class Course extends Model
                 'max:255',
                 $id ? "unique:courses,name,{$id}" : 'unique:courses,name'
             ],
-            'code' => [
-                'required',
-                'string',
-                'max:10',
-                $id ? "unique:courses,code,{$id}" : 'unique:courses,code'
-            ],
+            // 'code' => [
+            //     'required',
+            //     'string',
+            //     'max:10',
+            //     $id ? "unique:courses,code,{$id}" : 'unique:courses,code'
+            // ],
             'credits' => 'required|integer|min:1|max:10',
             'lessons' => 'required|integer|min:1',
             'department_id' => 'nullable|exists:departments,id',
@@ -57,7 +57,7 @@ class Course extends Model
         return [
             'name.required' => 'Tên môn học là bắt buộc',
             'name.unique' => 'Tên môn học này đã tồn tại',
-            'code.required' => 'Mã môn học là bắt buộc',
+            // 'code.required' => 'Mã môn học là bắt buộc',
             'code.unique' => 'Mã môn học này đã tồn tại',
             'credits.required' => 'Số tín chỉ là bắt buộc',
             'lessons.required' => 'Số tiết học là bắt buộc',

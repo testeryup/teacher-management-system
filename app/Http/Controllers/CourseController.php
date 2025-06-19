@@ -45,12 +45,12 @@ class CourseController extends Controller
                     'max:255',
                     'unique:courses,name'  // FIX: Check duplicate name
                 ],
-                'code' => [
-                    'required',
-                    'string',
-                    'max:10',
-                    'unique:courses,code'  // FIX: Check duplicate code
-                ],
+                // 'code' => [
+                //     'required',
+                //     'string',
+                //     'max:10',
+                //     'unique:courses,code'  // FIX: Check duplicate code
+                // ],
                 'credits' => 'required|integer|min:1|max:10',
                 'lessons' => 'required|integer|min:1',
                 'department_id' => 'nullable|exists:departments,id',
@@ -59,7 +59,7 @@ class CourseController extends Controller
                 // FIX: Custom error messages
                 'name.required' => 'Tên môn học là bắt buộc',
                 'name.unique' => 'Tên môn học này đã tồn tại',
-                'code.required' => 'Mã môn học là bắt buộc',
+                // 'code.required' => 'Mã môn học là bắt buộc',
                 'code.unique' => 'Mã môn học này đã tồn tại',
                 'credits.required' => 'Số tín chỉ là bắt buộc',
                 'lessons.required' => 'Số tiết học là bắt buộc',
@@ -106,12 +106,12 @@ class CourseController extends Controller
                     'max:255',
                     Rule::unique('courses', 'name')->ignore($course->id)  // FIX: Ignore current record
                 ],
-                'code' => [
-                    'required',
-                    'string',
-                    'max:10',
-                    Rule::unique('courses', 'code')->ignore($course->id)  // FIX: Ignore current record
-                ],
+                // 'code' => [
+                //     'required',
+                //     'string',
+                //     'max:10',
+                //     Rule::unique('courses', 'code')->ignore($course->id)  // FIX: Ignore current record
+                // ],
                 'credits' => 'required|integer|min:1|max:10',
                 'lessons' => 'required|integer|min:1',
                 'department_id' => 'nullable|exists:departments,id',
@@ -119,7 +119,7 @@ class CourseController extends Controller
             ], [
                 'name.required' => 'Tên môn học là bắt buộc',
                 'name.unique' => 'Tên môn học này đã tồn tại',
-                'code.required' => 'Mã môn học là bắt buộc',
+                // 'code.required' => 'Mã môn học là bắt buộc',
                 'code.unique' => 'Mã môn học này đã tồn tại',
             ]);
             
