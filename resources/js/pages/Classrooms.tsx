@@ -152,7 +152,7 @@ export default function Classrooms({
     courses,
     semesters,
     academicYears,
-    filters = {} // FIX: Default empty object if undefined
+    filters = {}
 }: ClassroomsPageProps) {
     const { props } = usePage();
     const user = (props as any).auth?.user;
@@ -173,6 +173,8 @@ export default function Classrooms({
     const [searchTerm, setSearchTerm] = useState<string>(filters?.search || '');
     const [isFilterOpen, setIsFilterOpen] = useState(true);
 
+
+    console.log("check semesters:", semesters);
     const { data, setData, post, put, delete: destroy, processing, errors, reset } = useForm({
         name: '',
         course_id: null as number | null,
@@ -838,7 +840,7 @@ export default function Classrooms({
                                     <div className="flex gap-2">
                                         <Button
                                             onClick={applyFilters}
-                                            size="default"
+                                            size="lg"
                                             className="flex-1"
                                         >
                                             <Search className="h-4 w-4 mr-1" />
@@ -847,7 +849,7 @@ export default function Classrooms({
                                         <Button
                                             onClick={clearFilters}
                                             variant="outline"
-                                            size="default"
+                                            size="lg"
                                             disabled={!hasActiveFilters}
                                         >
                                             <X className="h-4 w-4" />

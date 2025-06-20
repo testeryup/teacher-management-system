@@ -111,6 +111,10 @@ export default function SalaryIndex({ salaryConfigs, semesters }: Props) {
             return;
         }
 
+        if(data.base_salary_per_lesson > 500000){
+            toast.error("Tiền dạy một tiết không được lớn hơn 500k");
+            return;
+        }
         post(route('salary.store'), {
             onSuccess: () => {
                 toast.success('Tạo cấu hình lương thành công!');

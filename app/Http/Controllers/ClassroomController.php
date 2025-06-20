@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Semester;
 use App\Models\Teacher;
 use App\Models\AcademicYear;
+use App\Models\SalaryConfig;
 use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -109,7 +110,19 @@ class ClassroomController extends Controller
                 'number_of_classes' => 'required|integer|min:1|max:20',
                 'class_name_prefix' => 'required|string|max:50',
             ]);
-            
+
+            $salaryConfig = SalaryConfig::where('semester_id', $validated['semester_id'])
+                ->whereIn('status', ['active', 'closed'])
+                ->first();
+            if ($salaryConfig) {
+                $semester = \App\Models\Semester::find($validated['semester_id']);
+                $statusLabel = $salaryConfig->status === 'active' ? 'đã tính lương' : 'đã đóng bảng lương';
+                
+                return back()->withErrors([
+                    'semester_id' => "Không thể tạo lớp học cho học kỳ \"{$semester->name}\" vì {$statusLabel}. Việc thay đổi lớp học sẽ ảnh hưởng đến kết quả tính lương đã có."
+                ]);
+            }
+
             // Kiểm tra quyền tạo lớp học cho trưởng khoa
             if ($user->isDepartmentHead()) {
                 $course = Course::find($validated['course_id']);
@@ -126,9 +139,11 @@ class ClassroomController extends Controller
                 }
             }
             
+            
+            
             $createdClasses = [];
-            $course = Course::find($validated['course_id']);
             $semester = Semester::find($validated['semester_id']);
+            $course = Course::find($validated['course_id']);
             
             // Tạo nhiều lớp học
             for ($i = 1; $i <= $validated['number_of_classes']; $i++) {
@@ -211,7 +226,19 @@ class ClassroomController extends Controller
                 'teacher_id' => 'nullable|integer|exists:teachers,id',
                 'students' => 'required|integer|min:0|max:200',
             ]);
-            
+
+            $salaryConfig = SalaryConfig::where('semester_id', $validated['semester_id'])
+                ->whereIn('status', ['active', 'closed'])
+                ->first();
+            if ($salaryConfig) {
+                $semester = \App\Models\Semester::find($validated['semester_id']);
+                $statusLabel = $salaryConfig->status === 'active' ? 'đã tính lương' : 'đã đóng bảng lương';
+                
+                return back()->withErrors([
+                    'semester_id' => "Không thể tạo lớp học cho học kỳ \"{$semester->name}\" vì {$statusLabel}. Việc thay đổi lớp học sẽ ảnh hưởng đến kết quả tính lương đã có."
+                ]);
+            }
+
             // Kiểm tra quyền tạo lớp học cho trưởng khoa
             if ($user->isDepartmentHead()) {
                 $course = Course::find($validated['course_id']);
@@ -248,7 +275,17 @@ class ClassroomController extends Controller
     {
         try {
             $user = auth()->user();
-            
+            $salaryConfig = SalaryConfig::where('semester_id', $classroom->semester_id)
+                ->whereIn('status', ['active', 'closed'])
+                ->first();
+                
+            if ($salaryConfig) {
+                $statusLabel = $salaryConfig->status === 'active' ? 'đã tính lương' : 'đã đóng bảng lương';
+                
+                return back()->withErrors([
+                    'permission' => "Không thể sửa lớp học vì học kỳ \"{$classroom->semester->name}\" {$statusLabel}. Việc thay đổi thông tin lớp học sẽ ảnh hưởng đến kết quả tính lương đã có."
+                ]);
+            }
             // Kiểm tra quyền sửa lớp học cho trưởng khoa
             if ($user->isDepartmentHead()) {
                 $course = $classroom->course;
@@ -291,7 +328,17 @@ class ClassroomController extends Controller
     {
         try {
             $user = auth()->user();
-            
+            $salaryConfig = SalaryConfig::where('semester_id', $classroom->semester_id)
+                ->whereIn('status', ['active', 'closed'])
+                ->first();
+                
+            if ($salaryConfig) {
+                $statusLabel = $salaryConfig->status === 'active' ? 'đã tính lương' : 'đã đóng bảng lương';
+                
+                return back()->withErrors([
+                    'permission' => "Không thể xóa lớp học vì học kỳ \"{$classroom->semester->name}\" {$statusLabel}. Việc xóa lớp học sẽ ảnh hưởng đến kết quả tính lương đã có."
+                ]);
+            }
             // Kiểm tra quyền xóa lớp học cho trưởng khoa
             if ($user->isDepartmentHead()) {
                 $course = $classroom->course;
