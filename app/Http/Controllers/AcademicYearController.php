@@ -122,6 +122,8 @@ class AcademicYearController extends Controller
             // }
 
             // Safe to delete
+            // dd($academicyear);
+            // dump($user);
             $academicyear->delete();
             
             return redirect()->route('academicyears.index')

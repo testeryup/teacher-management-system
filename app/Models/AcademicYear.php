@@ -28,7 +28,7 @@ class AcademicYear extends Model
 
     public function canBeDeleted(): bool
     {
-        return !$this->hasSalaryConfigs() 
-            && !$this->semesters()->exists();
+        return !$this->hasSalaryConfigs() ;
+            // && !$this->semesters()->exists();
     }
 }
