@@ -115,11 +115,11 @@ class AcademicYearController extends Controller
             }
 
             // Check for semesters
-            if ($academicyear->semesters()->count() > 0) {
-                return back()->withErrors([
-                    'reference' => 'Không thể xóa năm học này vì đang có học kỳ'
-                ]);
-            }
+            // if ($academicyear->semesters()->count() > 0) {
+            //     return back()->withErrors([
+            //         'reference' => 'Không thể xóa năm học này vì đang có học kỳ'
+            //     ]);
+            // }
 
             // Safe to delete
             $academicyear->delete();
