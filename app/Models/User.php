@@ -64,6 +64,11 @@ class User extends Authenticatable
         return $this->role === 'department_head';
     }
 
+    public function isTeacher(): bool
+    {
+        return $this->role === 'teacher';
+    }
+    
     public function canManageDepartment(int $departmentId): bool
     {
         return $this->isAdmin() || ($this->isDepartmentHead() && $this->department_id === $departmentId);

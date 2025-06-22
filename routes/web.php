@@ -19,7 +19,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('role:admin,department_head')->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('role:admin,department_head,teacher,accountant')->name('dashboard');
 
     //department
     Route::middleware('role:admin')->group(function (){
@@ -49,6 +49,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
             
         Route::get('/salary/{salaryConfig}/preview-pdf', [SalaryController::class, 'previewPdf'])
             ->name('salary.preview-pdf');
+    });
+    // FIX: Teacher routes - Thêm routes mới cho giáo viên
+    Route::middleware('role:teacher')->prefix('teacher')->name('teacher.')->group(function () {
+        Route::get('/classrooms', [ClassroomController::class, 'teacherClassrooms'])->name('classrooms');
+        Route::get('/salary', [SalaryController::class, 'teacherSalary'])->name('salary');
+        
+        // FIX: Teacher reports routes
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'teacherReportsIndex'])->name('index');
+            Route::get('/{academicYear}', [ReportController::class, 'teacherYearly'])->name('yearly');
+            Route::get('/{academicYear}/pdf', [ReportController::class, 'exportTeacherYearlyPdfForTeacher'])->name('yearly.pdf');
+        });
     });
     
     Route::middleware('role:admin,department_head')->group(function (){

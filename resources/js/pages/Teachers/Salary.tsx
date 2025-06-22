@@ -214,16 +214,16 @@ export default function TeacherSalary({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Bảng lương của tôi" />
 
-            <div className="space-y-6">
+            <div className="space-y-6 p-4">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Bảng lương của tôi</h1>
                         <p className="text-muted-foreground">
                             Theo dõi lương giảng dạy của bạn theo từng học kỳ
                         </p>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Teacher Info */}
                 <Card>

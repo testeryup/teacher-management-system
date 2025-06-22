@@ -36,7 +36,10 @@ class Semester extends Model
     {
         return $this->hasMany(SalaryConfig::class, 'semester_id');
     }
-
+    public function salaryConfigs(): HasMany
+    {
+        return $this->salary_config();
+    }
     protected $appends = [];
 
     // FIX: Override toArray để đảm bảo consistent naming

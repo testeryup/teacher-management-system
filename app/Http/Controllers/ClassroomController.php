@@ -372,4 +372,77 @@ class ClassroomController extends Controller
         
         return response()->json(['semesters' => $semesters]);
     }
+
+    /**
+     * Hiển thị lớp học của giáo viên đang đăng nhập
+     */
+public function teacherClassrooms(Request $request)
+{
+    $user = auth()->user();
+    
+    // Chỉ cho phép giáo viên truy cập - ĐÚNG CÁCH
+    if (!$user || !$user->isTeacher()) {
+        abort(403, 'Bạn không có quyền truy cập trang này.');
+    }
+    
+    // FIX: Kiểm tra teacher qua email - ĐÚNG CÁCH
+    $teacher = Teacher::where('email', $user->email)->first();
+    
+    if (!$teacher) {
+        abort(404, 'Không tìm thấy thông tin giảng viên');
+    }
+    
+    // FIX: Base query - Chỉ lấy lớp của giáo viên đang đăng nhập
+    $query = Classroom::with([
+        'course.department',
+        'semester.academicYear',
+        'teacher.department',
+        'teacher.degree'
+    ])->where('teacher_id', $teacher->id);
+    
+    // Apply filters
+    $academicYearId = $request->input('academic_year_id');
+    $semesterId = $request->input('semester_id');
+    $courseId = $request->input('course_id');
+    
+    if ($academicYearId) {
+        $query->whereHas('semester', function ($q) use ($academicYearId) {
+            $q->where('academicYear_id', $academicYearId);
+        });
+    }
+    
+    if ($semesterId) {
+        $query->where('semester_id', $semesterId);
+    }
+    
+    if ($courseId) {
+        $query->where('course_id', $courseId);
+    }
+    
+    $classrooms = $query->orderBy('created_at', 'desc')->paginate(10);
+    
+    // Get filter data - chỉ những khóa học mà giáo viên đang dạy
+    $teacherCourses = Course::whereIn('id', 
+        Classroom::where('teacher_id', $teacher->id)
+            ->pluck('course_id')
+            ->unique()
+    )->with('department')->get();
+    
+    $academicYears = AcademicYear::with('semesters')->get();
+    $semesters = Semester::with('academicYear')->get();
+    
+    return Inertia::render('Teachers/Classrooms', [
+        'classrooms' => $classrooms,
+        'courses' => $teacherCourses,
+        'academicYears' => $academicYears,
+        'semesters' => $semesters,
+        'filters' => [
+            'academic_year_id' => $academicYearId,
+            'semester_id' => $semesterId,
+            'course_id' => $courseId,
+        ],
+        'teacher' => $teacher->load(['department', 'degree'])
+    ]);
+}
+
 }

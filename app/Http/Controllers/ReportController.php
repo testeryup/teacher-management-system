@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+// use App\Http\Controllers\Str;
 
 class ReportController extends Controller
 {
@@ -437,5 +438,134 @@ private function exportTeacherYearlyPdf(Request $request)
         );
         
         return $pdf->download($filename);
+    }
+    /**
+     * FIX: Teacher reports index - Trang chọn năm học cho giáo viên
+     */
+    public function teacherReportsIndex()
+    {
+        $user = auth()->user();
+        
+        if (!$user || !$user->isTeacher()) {
+            abort(403, 'Bạn không có quyền truy cập trang này.');
+        }
+        
+        // Lấy teacher qua email
+        $teacher = Teacher::where('email', $user->email)->first();
+        
+        if (!$teacher) {
+            abort(404, 'Không tìm thấy thông tin giảng viên');
+        }
+        
+        // Lấy các năm học có dữ liệu lương của giáo viên này
+        $academicYears = AcademicYear::whereHas('semesters.salaryConfigs.teacherSalaries', function($query) use ($teacher) {
+            $query->where('teacher_id', $teacher->id);
+        })->with('semesters')->orderBy('created_at', 'desc')->get();
+        
+        return Inertia::render('Teachers/Reports/Index', [
+            'teacher' => $teacher->load(['department', 'degree']),
+            'academicYears' => $academicYears
+        ]);
+    }
+
+    /**
+     * Báo cáo lương hàng năm của giáo viên
+     */
+    public function teacherYearly(Request $request, AcademicYear $academicYear)
+    {
+        $user = auth()->user();
+        
+        // FIX: Kiểm tra đúng cách
+        if (!$user || !$user->isTeacher()) {
+            abort(403, 'Bạn không có quyền truy cập trang này.');
+        }
+        
+        // FIX: Lấy teacher qua email
+        $teacher = Teacher::where('email', $user->email)->first();
+        
+        if (!$teacher) {
+            abort(404, 'Không tìm thấy thông tin giảng viên');
+        }
+        
+        $reportData = $this->getTeacherReportData($teacher->id, $academicYear->id);
+        
+        return Inertia::render('Teachers/Reports/Yearly', $reportData);
+    }
+
+    /**
+     * Export PDF báo cáo hàng năm của giáo viên
+     */
+    public function exportTeacherYearlyPdfForTeacher(AcademicYear $academicYear)
+    {
+        $user = auth()->user();
+        
+        // FIX: Kiểm tra đúng cách
+        if (!$user || !$user->isTeacher()) {
+            abort(403, 'Bạn không có quyền truy cập trang này.');
+        }
+        
+        // FIX: Lấy teacher qua email
+        $teacher = Teacher::where('email', $user->email)->first();
+        
+        if (!$teacher) {
+            abort(404, 'Không tìm thấy thông tin giảng viên');
+        }
+        
+        $reportData = $this->getTeacherReportData($teacher->id, $academicYear->id);
+        
+        $pdf = Pdf::loadView('reports.teacher-yearly-pdf', $reportData);
+        $pdf->setPaper('A4', 'portrait');
+        
+        $fileName = "bao-cao-luong-{$teacher->fullName}-{$academicYear->name}.pdf";
+        $fileName = \Illuminate\Support\Str::slug($fileName) . '.pdf';
+        
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * FIX: Helper method để lấy dữ liệu báo cáo teacher
+     */
+    private function getTeacherReportData($teacherId, $academicYearId)
+    {
+        $teacher = Teacher::with(['department', 'degree'])->find($teacherId);
+        $academicYear = AcademicYear::find($academicYearId);
+
+        // Lấy dữ liệu lương theo từng học kỳ trong năm học
+        $salaryData = TeacherSalary::with([
+            'salaryConfig.semester',
+            'classroom.course'
+        ])
+        ->where('teacher_id', $teacherId)
+        ->whereHas('salaryConfig.semester', function($query) use ($academicYearId) {
+            $query->where('academicYear_id', $academicYearId);
+        })
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->groupBy(function($salary) {
+            return $salary->salaryConfig->semester->name;
+        });
+
+        // Tính toán summary
+        $totalSalary = 0;
+        $totalClasses = 0;
+        $totalLessons = 0;
+
+        foreach ($salaryData as $semesterSalaries) {
+            $totalSalary += $semesterSalaries->sum('total_salary');
+            $totalClasses += $semesterSalaries->count();
+            $totalLessons += $semesterSalaries->sum('converted_lessons');
+        }
+
+        return [
+            'teacher' => $teacher,
+            'academicYear' => $academicYear,
+            'salaryData' => $salaryData,
+            'summary' => [
+                'totalSalary' => $totalSalary,
+                'totalClasses' => $totalClasses,
+                'totalLessons' => $totalLessons,
+                'averageSalaryPerClass' => $totalClasses > 0 ? $totalSalary / $totalClasses : 0
+            ]
+        ];
     }
 }

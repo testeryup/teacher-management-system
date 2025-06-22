@@ -26,9 +26,12 @@ class DashboardController extends Controller
         if ($user->isAdmin()) {
             $dashboardData = $this->getAdminDashboardData();
         } elseif ($user->isDepartmentHead()) {
-            $dashboardData = $this->getDepartmentHeadDashboardData($user);
+            // $dashboardData = $this->getDepartmentHeadDashboardData($user);
+            $dashboardData = $this->getAdminDashboardData();
+        } elseif ($user->isTeacher()) {  // FIX: Thêm case cho teacher
+            return $this->teacherDashboard($user);
         } else {
-            $dashboardData = $this->getTeacherDashboardData($user);
+            abort(403, 'Unauthorized access');
         }
 
         return Inertia::render('dashboard', $dashboardData);
@@ -318,5 +321,62 @@ class DashboardController extends Controller
             'closed' => 'Đã đóng',
             default => 'Không xác định'
         };
+    }
+
+    private function teacherDashboard($user)
+    {
+        // FIX: Lấy teacher qua email thay vì relationship
+        $teacher = Teacher::where('email', $user->email)->first();
+        
+        if (!$teacher) {
+            abort(404, 'Thông tin giảng viên không tồn tại');
+        }
+        
+        // Thống kê cơ bản
+        $totalClasses = Classroom::where('teacher_id', $teacher->id)->count();
+        
+        // Lớp học hiện tại (học kỳ gần nhất)
+        $currentSemester = Semester::with('academicYear')
+            ->orderBy('created_at', 'desc')
+            ->first();
+        
+        $currentClasses = 0;
+        if ($currentSemester) {
+            $currentClasses = Classroom::where('teacher_id', $teacher->id)
+                ->where('semester_id', $currentSemester->id)
+                ->count();
+        }
+        
+        // Tổng lương đã nhận (từ các học kỳ đã tính)
+        $totalEarnings = TeacherSalary::where('teacher_id', $teacher->id)->sum('total_salary');
+        
+        // Lớp học gần đây
+        $recentClasses = Classroom::with(['course', 'semester.academicYear'])
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+        
+        // Lương theo học kỳ gần đây
+        $recentSalaries = TeacherSalary::with(['salaryConfig.semester', 'classroom.course'])
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->groupBy(function($salary) {
+                return $salary->salaryConfig->semester->name;
+            });
+        
+        return Inertia::render('Teachers/Dashboard', [
+            'teacher' => $teacher->load(['department', 'degree']),
+            'stats' => [
+                'totalClasses' => $totalClasses,
+                'currentClasses' => $currentClasses,
+                'totalEarnings' => $totalEarnings,
+                'currentSemester' => $currentSemester
+            ],
+            'recentClasses' => $recentClasses,
+            'recentSalaries' => $recentSalaries
+        ]);
     }
 }

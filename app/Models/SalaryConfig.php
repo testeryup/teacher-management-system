@@ -42,4 +42,9 @@ class SalaryConfig extends Model
     {
         return $query->where('status', 'active');
     }
+
+    public function scopeDraft($query)
+    {
+        return $query->where('status', 'draft');
+    }
 }

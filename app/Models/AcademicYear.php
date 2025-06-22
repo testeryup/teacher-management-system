@@ -31,4 +31,11 @@ class AcademicYear extends Model
         return !$this->hasSalaryConfigs() ;
             // && !$this->semesters()->exists();
     }
+
+    public function salaryConfigs()
+    {
+        return \App\Models\SalaryConfig::whereIn('semester_id', 
+            $this->semesters()->pluck('id')
+        );
+    }
 }

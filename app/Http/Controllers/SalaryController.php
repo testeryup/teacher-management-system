@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\SalaryConfig;
 use App\Models\TeacherSalary;
 use App\Models\Semester;
+use App\Models\Teacher;
+use App\Models\AcademicYear;
 use App\Services\SalaryCalculatorService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -295,4 +297,88 @@ class SalaryController extends Controller
         // Stream PDF để xem trước
         return $pdf->stream('bao-cao-luong-preview.pdf');
     }
+
+    /**
+     * Hiển thị lương của giáo viên đang đăng nhập
+     */
+public function teacherSalary(Request $request)
+{
+    $user = auth()->user();
+    
+    // FIX: Kiểm tra đúng cách
+    if (!$user || !$user->isTeacher()) {
+        abort(403, 'Bạn không có quyền truy cập trang này.');
+    }
+    
+    // FIX: Lấy teacher qua email
+    $teacher = Teacher::where('email', $user->email)->first();
+    
+    if (!$teacher) {
+        abort(404, 'Không tìm thấy thông tin giảng viên');
+    }
+    
+    $academicYearId = $request->input('academic_year_id');
+    $semesterId = $request->input('semester_id');
+    
+    // Get available academic years và semesters
+    $academicYears = AcademicYear::with('semesters')->get();
+    $semesters = Semester::with('academicYear')->get();
+    
+    $salaryData = collect();
+    $summary = [
+        'totalSalary' => 0,
+        'totalClasses' => 0,
+        'totalLessons' => 0,
+        'averageSalaryPerClass' => 0
+    ];
+    
+    // Nếu có filter, lấy dữ liệu lương
+    if ($academicYearId || $semesterId) {
+        $query = TeacherSalary::with([
+            'salaryConfig.semester.academicYear',
+            'classroom.course'
+        ])->where('teacher_id', $teacher->id);
+        
+        if ($academicYearId) {
+            $query->whereHas('salaryConfig.semester', function($q) use ($academicYearId) {
+                $q->where('academicYear_id', $academicYearId);
+            });
+        }
+        
+        if ($semesterId) {
+            $query->whereHas('salaryConfig.semester', function($q) use ($semesterId) {
+                $q->where('id', $semesterId);
+            });
+        }
+        
+        $salaryRecords = $query->get();
+        
+        // Group by semester
+        $salaryData = $salaryRecords->groupBy(function($salary) {
+            return $salary->salaryConfig->semester->name;
+        });
+        
+        // Calculate summary
+        $summary = [
+            'totalSalary' => $salaryRecords->sum('total_salary'),
+            'totalClasses' => $salaryRecords->count(),
+            'totalLessons' => $salaryRecords->sum('converted_lessons'),
+            'averageSalaryPerClass' => $salaryRecords->count() > 0 
+                ? $salaryRecords->sum('total_salary') / $salaryRecords->count() 
+                : 0
+        ];
+    }
+    
+    return Inertia::render('Teachers/Salary', [
+        'teacher' => $teacher->load(['department', 'degree']),
+        'academicYears' => $academicYears,
+        'semesters' => $semesters,
+        'salaryData' => $salaryData,
+        'summary' => $summary,
+        'filters' => [
+            'academic_year_id' => $academicYearId,
+            'semester_id' => $semesterId,
+        ]
+    ]);
+}
 }
