@@ -14,7 +14,7 @@ return new class extends Migration
             // $table->dropColumn('month');
             
             // Thêm cột semester_id
-            // $table->foreignId('semester_id')->after('id')->constrained('semesters')->onDelete('cascade');
+            $table->foreignId('semester_id')->after('id')->constrained('semesters')->onDelete('cascade');
             $table->unique('semester_id'); // Mỗi học kỳ chỉ có 1 config
         });
     }
