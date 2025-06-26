@@ -106,7 +106,7 @@ interface CustomPageProps {
 export default function Index({ teachers, degrees, departments }: CustomPageProps) {
     const page = usePage<PageProps>();
     const flash = page.props?.flash as CustomPageProps['flash'];
-    
+
     // FIX: Add all required fields theo backend
     const { data, setData, post, processing, errors, reset, delete: destroy, put } = useForm<{
         fullName: string;
@@ -136,7 +136,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
     const [pendingUpdateId, setPendingUpdateId] = useState<number | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpdate, setIsUpdate] = useState(false);
-    
+
     // FIX: Add password visibility states
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
@@ -321,7 +321,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
         <AppLayout breadcrumbs={breadcrumbs}>
             <Toaster />
             <Head title="Quản lý giáo viên" />
-            
+
             <div className='m-4'>
                 <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
                     <SheetTrigger asChild>
@@ -335,14 +335,14 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                                 {isUpdate ? 'Chỉnh sửa thông tin giáo viên' : 'Thêm giáo viên mới'}
                             </SheetTitle>
                             <SheetDescription>
-                                {isUpdate 
+                                {isUpdate
                                     ? 'Cập nhật thông tin giáo viên. Để trống mật khẩu nếu không muốn thay đổi.'
                                     : 'Nhập thông tin giáo viên và tạo tài khoản đăng nhập.'
                                 }
                             </SheetDescription>
                         </SheetHeader>
-                        
-                        <form onSubmit={handleSubmit} id="teacher-form" className="space-y-6 p-4">
+
+                        <form onSubmit={handleSubmit} id="teacher-form" className="space-y-6 p-4 overflow-auto">
                             <div className="space-y-4">
                                 {/* Full Name Field */}
                                 <div className="grid gap-2">
@@ -479,7 +479,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                                             {isUpdate ? 'Đổi mật khẩu (tùy chọn)' : 'Tạo tài khoản đăng nhập'}
                                         </Label>
                                     </div>
-                                    
+
                                     <div className="grid gap-2">
                                         <Label htmlFor="password">
                                             Mật khẩu {!isUpdate && <span className="text-red-500">*</span>}
@@ -505,7 +505,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                                         </div>
                                         {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
                                     </div>
-                                    
+
                                     <div className="grid gap-2">
                                         <Label htmlFor="password_confirmation">
                                             Xác nhận mật khẩu {!isUpdate && <span className="text-red-500">*</span>}
@@ -534,7 +534,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                                 </div>
                             </div>
                         </form>
-                        
+
                         <SheetFooter>
                             <SheetClose asChild>
                                 <Button variant="outline" type='button' className='hover:cursor-pointer'>
@@ -542,8 +542,8 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                                 </Button>
                             </SheetClose>
                             <Button
-                                type="submit" 
-                                form="teacher-form" 
+                                type="submit"
+                                form="teacher-form"
                                 disabled={processing}
                                 className='hover:cursor-pointer'
                             >
@@ -640,7 +640,7 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                     <AlertDialogHeader>
                         <AlertDialogTitle>Xác nhận xoá</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bạn có chắc chắn muốn xoá giáo viên <strong>{pendingDeleteName}</strong> không? 
+                            Bạn có chắc chắn muốn xoá giáo viên <strong>{pendingDeleteName}</strong> không?
                             <br />
                             <span className="text-red-600 font-medium">
                                 Hành động này sẽ xóa cả tài khoản đăng nhập và không thể hoàn tác.
@@ -648,14 +648,14 @@ export default function Index({ teachers, degrees, departments }: CustomPageProp
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel 
+                        <AlertDialogCancel
                             className='hover:cursor-pointer'
                             disabled={processing}
                         >
                             Huỷ
                         </AlertDialogCancel>
-                        <AlertDialogAction 
-                            className='hover:cursor-pointer' 
+                        <AlertDialogAction
+                            className='hover:cursor-pointer'
                             onClick={confirmDelete}
                             disabled={processing}
                         >

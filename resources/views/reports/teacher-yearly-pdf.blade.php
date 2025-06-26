@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Báo cáo cá nhân - {{ $teacher->fullName }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; padding: 20px; }
         .header { text-align: center; margin-bottom: 30px; }
         .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .info-table td { padding: 8px; border: 1px solid #ddd; }

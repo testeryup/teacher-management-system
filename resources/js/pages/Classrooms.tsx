@@ -462,7 +462,7 @@ export default function Classrooms({
                                 </SheetDescription>
                             </SheetHeader>
 
-                            <form onSubmit={handleSubmit} id="classroom-form" className="space-y-6 p-4">
+                            <form onSubmit={handleSubmit} id="classroom-form" className="space-y-6 p-4 overflow-auto">
                                 <div className="space-y-4">
                                     {/* Tên lớp học */}
                                     <div className="grid gap-2">

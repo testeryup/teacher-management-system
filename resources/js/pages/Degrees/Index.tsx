@@ -204,7 +204,7 @@ export default function Index({ degrees }: CustomPageProps) {
                                 Nhập thông tin ở đây, sau đó nhấn lưu
                             </SheetDescription>
                         </SheetHeader>
-                        <form onSubmit={handleSubmit} id="degree-form">
+                        <form onSubmit={handleSubmit} id="degree-form" className='overflow-auto'>
                             <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="name" className="text-right">

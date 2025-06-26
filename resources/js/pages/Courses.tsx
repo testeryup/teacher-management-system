@@ -397,7 +397,7 @@ export default function Courses({ courses, departments }: CustomPageProps) {
                             </SheetDescription>
                         </SheetHeader>
 
-                        <form onSubmit={handleSubmit} id="course-form" className="space-y-6 p-4">
+                        <form onSubmit={handleSubmit} id="course-form" className="space-y-6 p-4 overflow-auto">
                             <div className="space-y-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Tên môn học *</Label>

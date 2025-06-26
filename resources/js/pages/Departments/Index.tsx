@@ -161,7 +161,7 @@ export default function Index({ departments }: CustomPageProps) {
                                 Nhập thông tin ở đây, sau đó nhấn lưu
                             </SheetDescription>
                         </SheetHeader>
-                        <form onSubmit={handleSubmit} id="department-form" className='p-4'>
+                        <form onSubmit={handleSubmit} id="department-form" className='p-4 overflow-auto'>
                             <div>
                                 <div className="grid grid-rows-2 items-center ">
                                     <Label htmlFor="name">
