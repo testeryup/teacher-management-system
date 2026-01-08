@@ -4,7 +4,7 @@
 
 ## 👥 Thành viên nhóm 8
 
-- **Nguyễn Mạnh Đạt**
+- **Nguyễn Mạnh Đạt - (L)**
 - **Nguyễn Đình Trường** 
 - **Đỗ Huy Dương**
 - **Nguyễn Văn Toàn**
@@ -50,6 +50,17 @@ Hệ thống quản lý giảng viên là một ứng dụng web được xây d
 - **Laravel Tinker** - REPL
 - **Composer** - PHP dependency manager
 - **NPM** - Node.js package manager
+
+---
+
+## Một số hình ảnh về giao diện sản phẩm
+
+![admin](https://github.com/testeryup/teacher-management-system/blob/main/images/1.png)
+![admin](https://github.com/testeryup/teacher-management-system/blob/main/images/2.png)
+![admin](https://github.com/testeryup/teacher-management-system/blob/main/images/3.png)
+![admin](https://github.com/testeryup/teacher-management-system/blob/main/images/4.png)
+![admin](https://github.com/testeryup/teacher-management-system/blob/main/images/5.png)
+![admin](https://github.com/testeryup/teacher-management-system/blob/main/images/6.png)
 
 ---
 
